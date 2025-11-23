@@ -70,7 +70,8 @@ const Properties = () => {
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error saving property', error);
-            alert('Failed to save property');
+            const errorMessage = error.response?.data?.message || 'Failed to save property';
+            alert(errorMessage);
         }
     };
 

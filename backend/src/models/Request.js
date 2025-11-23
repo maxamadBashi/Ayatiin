@@ -9,6 +9,7 @@ const requestSchema = new mongoose.Schema({
     property: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Property',
+        required: true,
     },
     type: {
         type: String,
@@ -17,7 +18,12 @@ const requestSchema = new mongoose.Schema({
     },
     message: {
         type: String,
-        required: true,
+    },
+    visitDate: {
+        type: Date,
+    },
+    amount: {
+        type: Number,
     },
     status: {
         type: String,

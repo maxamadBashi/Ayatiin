@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Building2, Users, DoorOpen, Wrench, MessageSquare, Ban, Trash2 } from 'lucide-react';
+import { Building2, Users, DoorOpen, Wrench, MessageSquare, Ban, Trash2, ArrowRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Link } from 'react-router-dom';
 import axios from '../utils/axios';
 import { useAuth } from '../context/AuthContext';
 import CreateAdminModal from '../components/CreateAdminModal';
@@ -167,12 +168,21 @@ const Dashboard = () => {
           icon={<Users size={24} />}
           color="bg-indigo-600"
         />
-        <StatCard
-          title="Pending Requests"
-          value={stats.customerRequests}
-          icon={<MessageSquare size={24} />}
-          color="bg-yellow-600"
-        />
+        <Link to="/requests" className="block">
+          <div className="bg-white rounded-xl shadow-sm p-6 flex items-center border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+            <div className="p-4 rounded-full mr-4 bg-yellow-600 bg-opacity-10 group-hover:bg-opacity-20 transition-colors">
+              <MessageSquare size={24} className="text-yellow-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-gray-500 text-sm font-medium">Pending Requests</p>
+              <div className="flex items-center justify-between mt-1">
+                <h3 className="text-2xl font-bold text-gray-800">{stats.customerRequests}</h3>
+                <ArrowRight size={18} className="text-gray-400 group-hover:text-yellow-600 transition-colors" />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Click to view booking/purchase requests</p>
+            </div>
+          </div>
+        </Link>
       </div>
 
       {/* User Management Section */}
