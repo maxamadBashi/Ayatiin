@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login } = useAuth();
+    const { login, user } = useAuth();
     const navigate = useNavigate();
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         const result = await login(email, password);
         if (result.success) {
-            navigate('/');
+            // Redirect based on role or previous location
+            if (location.state?.from) {
+                navigate(location.state.from);
+            } else {
+                const role = result.user.role;
+                if (role === 'customer' || role === 'tenant') {
+                    navigate('/');
+                } else {
+                    navigate('/admin/dashboard');
+                }
+            }
         } else {
             setError(result.message);
         }

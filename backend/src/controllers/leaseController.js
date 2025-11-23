@@ -18,7 +18,7 @@ const getLeases = async (req, res) => {
 // @route   POST /api/leases
 // @access  Private
 const createLease = async (req, res) => {
-  const { tenant, unit, startDate, endDate, monthlyRent, status } = req.body;
+  const { tenant, unit, startDate, endDate, rentAmount, status } = req.body;
 
   try {
     const lease = new Lease({
@@ -26,7 +26,7 @@ const createLease = async (req, res) => {
       unit,
       startDate,
       endDate,
-      monthlyRent,
+      rentAmount,
       status,
     });
 
@@ -41,7 +41,7 @@ const createLease = async (req, res) => {
 // @route   PUT /api/leases/:id
 // @access  Private
 const updateLease = async (req, res) => {
-  const { tenant, unit, startDate, endDate, monthlyRent, status } = req.body;
+  const { tenant, unit, startDate, endDate, rentAmount, status } = req.body;
 
   try {
     const lease = await Lease.findById(req.params.id);
@@ -51,7 +51,7 @@ const updateLease = async (req, res) => {
       lease.unit = unit || lease.unit;
       lease.startDate = startDate || lease.startDate;
       lease.endDate = endDate || lease.endDate;
-      lease.monthlyRent = monthlyRent || lease.monthlyRent;
+      lease.rentAmount = rentAmount || lease.rentAmount;
       lease.status = status || lease.status;
 
       const updatedLease = await lease.save();

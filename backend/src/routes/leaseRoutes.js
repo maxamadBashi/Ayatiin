@@ -6,12 +6,12 @@ const {
     updateLease,
     deleteLease,
 } = require('../controllers/leaseController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/auth');
 
-router.route('/').get(protect, getLeases).post(protect, createLease);
+router.route('/').get(protect, getLeases).post(protect, authorize('admin', 'manager'), createLease);
 router
     .route('/:id')
-    .put(protect, updateLease)
-    .delete(protect, deleteLease);
+    .put(protect, authorize('admin', 'manager'), updateLease)
+    .delete(protect, authorize('admin'), deleteLease);
 
 module.exports = router;

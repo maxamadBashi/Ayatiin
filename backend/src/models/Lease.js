@@ -19,7 +19,7 @@ const leaseSchema = new mongoose.Schema({
         type: Date,
         required: true,
     },
-    monthlyRent: {
+    rentAmount: {
         type: Number,
         required: true,
     },

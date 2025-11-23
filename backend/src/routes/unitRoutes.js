@@ -6,12 +6,12 @@ const {
     updateUnit,
     deleteUnit,
 } = require('../controllers/unitController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/auth');
 
-router.route('/').get(protect, getUnits).post(protect, admin, createUnit);
+router.route('/').get(protect, getUnits).post(protect, authorize('admin'), createUnit);
 router
     .route('/:id')
-    .put(protect, admin, updateUnit)
-    .delete(protect, admin, deleteUnit);
+    .put(protect, authorize('admin'), updateUnit)
+    .delete(protect, authorize('admin'), deleteUnit);
 
 module.exports = router;

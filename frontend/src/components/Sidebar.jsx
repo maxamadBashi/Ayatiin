@@ -9,6 +9,7 @@ import {
     CreditCard,
     Wrench,
     LogOut,
+    MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -21,13 +22,14 @@ const Sidebar = () => {
     };
 
     const navItems = [
-        { path: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+        { path: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
         { path: '/properties', icon: <Building2 size={20} />, label: 'Properties' },
         { path: '/units', icon: <DoorOpen size={20} />, label: 'Units' },
         { path: '/tenants', icon: <Users size={20} />, label: 'Tenants' },
         { path: '/leases', icon: <FileText size={20} />, label: 'Leases' },
         { path: '/payments', icon: <CreditCard size={20} />, label: 'Payments' },
         { path: '/maintenance', icon: <Wrench size={20} />, label: 'Maintenance' },
+        { path: '/requests', icon: <MessageSquare size={20} />, label: 'Requests' },
     ];
 
     return (

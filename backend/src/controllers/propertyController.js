@@ -32,19 +32,33 @@ const getPropertyById = async (req, res) => {
 // @route   POST /api/properties
 // @access  Private/Admin
 const createProperty = async (req, res) => {
-    const { name, location, description } = req.body;
+    console.log('Request Body:', req.body);
+    console.log('Request Files:', req.files);
+
+    const { name, location, type, description, status, price, bedrooms, bathrooms } = req.body;
+    const images = req.files ? req.files.map(file => file.path) : [];
 
     try {
-        const property = new Property({
+        const propertyData = {
             name,
             location,
+            type,
             description,
-        });
+            status,
+            images,
+        };
+
+        if (price) propertyData.price = price;
+        if (bedrooms) propertyData.bedrooms = bedrooms;
+        if (bathrooms) propertyData.bathrooms = bathrooms;
+
+        const property = new Property(propertyData);
 
         const createdProperty = await property.save();
         res.status(201).json(createdProperty);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Error creating property:', error);
+        res.status(500).json({ message: error.message, stack: error.stack });
     }
 };
 
@@ -52,7 +66,8 @@ const createProperty = async (req, res) => {
 // @route   PUT /api/properties/:id
 // @access  Private/Admin
 const updateProperty = async (req, res) => {
-    const { name, location, description } = req.body;
+    const { name, location, type, description, status, price, bedrooms, bathrooms } = req.body;
+    const images = req.files ? req.files.map(file => file.path) : [];
 
     try {
         const property = await Property.findById(req.params.id);
@@ -60,7 +75,17 @@ const updateProperty = async (req, res) => {
         if (property) {
             property.name = name || property.name;
             property.location = location || property.location;
+            property.type = type || property.type;
             property.description = description || property.description;
+            property.status = status || property.status;
+
+            if (price) property.price = price;
+            if (bedrooms) property.bedrooms = bedrooms;
+            if (bathrooms) property.bathrooms = bathrooms;
+
+            if (images.length > 0) {
+                property.images = [...property.images, ...images];
+            }
 
             const updatedProperty = await property.save();
             res.json(updatedProperty);
@@ -68,7 +93,8 @@ const updateProperty = async (req, res) => {
             res.status(404).json({ message: 'Property not found' });
         }
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Error updating property:', error);
+        res.status(500).json({ message: error.message });
     }
 };
 

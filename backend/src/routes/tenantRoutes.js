@@ -6,12 +6,12 @@ const {
     updateTenant,
     deleteTenant,
 } = require('../controllers/tenantController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/auth');
 
-router.route('/').get(protect, getTenants).post(protect, createTenant);
+router.route('/').get(protect, getTenants).post(protect, authorize('admin', 'manager'), createTenant);
 router
     .route('/:id')
-    .put(protect, updateTenant)
-    .delete(protect, deleteTenant);
+    .put(protect, authorize('admin', 'manager'), updateTenant)
+    .delete(protect, authorize('admin'), deleteTenant);
 
 module.exports = router;

@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
             const { data } = await axios.post('/auth/login', { email, password });
             setUser(data);
             localStorage.setItem('user', JSON.stringify(data));
-            return { success: true };
+            return { success: true, user: data };
         } catch (error) {
             return {
                 success: false,
@@ -33,13 +33,12 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (name, email, password) => {
         try {
-            const { data } = await axios.post('/auth/register', {
+            await axios.post('/auth/register', {
                 name,
                 email,
                 password,
             });
-            setUser(data);
-            localStorage.setItem('user', JSON.stringify(data));
+            // Do not auto-login after register
             return { success: true };
         } catch (error) {
             return {

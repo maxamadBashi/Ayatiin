@@ -17,8 +17,12 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'staff'],
-        default: 'staff',
+        enum: ['customer', 'admin', 'manager', 'superadmin'],
+        default: 'customer',
+    },
+    isBlocked: {
+        type: Boolean,
+        default: false,
     },
 }, {
     timestamps: true,

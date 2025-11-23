@@ -14,9 +14,15 @@ const unitSchema = new mongoose.Schema({
         type: String, // e.g., 1BHK, 2BHK, Studio
         required: true,
     },
-    rentPrice: {
+    rentAmount: {
         type: Number,
         required: true,
+    },
+    bedrooms: {
+        type: Number,
+    },
+    bathrooms: {
+        type: Number,
     },
     status: {
         type: String,

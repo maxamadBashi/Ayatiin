@@ -7,13 +7,16 @@ const {
     updateProperty,
     deleteProperty,
 } = require('../controllers/propertyController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/auth');
+const upload = require('../middleware/uploadMiddleware');
 
-router.route('/').get(protect, getProperties).post(protect, admin, createProperty);
-router
-    .route('/:id')
-    .get(protect, getPropertyById)
-    .put(protect, admin, updateProperty)
-    .delete(protect, admin, deleteProperty);
+router.route('/')
+    .get(getProperties)
+    .post(protect, authorize('admin', 'manager', 'superadmin'), upload.array('images'), createProperty);
+
+router.route('/:id')
+    .get(getPropertyById)
+    .put(protect, authorize('admin', 'manager', 'superadmin'), upload.array('images'), updateProperty)
+    .delete(protect, authorize('admin', 'manager', 'superadmin'), deleteProperty);
 
 module.exports = router;

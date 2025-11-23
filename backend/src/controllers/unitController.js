@@ -16,15 +16,17 @@ const getUnits = async (req, res) => {
 // @route   POST /api/units
 // @access  Private/Admin
 const createUnit = async (req, res) => {
-    const { property, unitNumber, type, rentPrice, status } = req.body;
+    const { property, unitNumber, type, rentAmount, status, bedrooms, bathrooms } = req.body;
 
     try {
         const unit = new Unit({
             property,
             unitNumber,
             type,
-            rentPrice,
+            rentAmount,
             status,
+            bedrooms,
+            bathrooms,
         });
 
         const createdUnit = await unit.save();
@@ -38,7 +40,7 @@ const createUnit = async (req, res) => {
 // @route   PUT /api/units/:id
 // @access  Private/Admin
 const updateUnit = async (req, res) => {
-    const { property, unitNumber, type, rentPrice, status } = req.body;
+    const { property, unitNumber, type, rentAmount, status, bedrooms, bathrooms } = req.body;
 
     try {
         const unit = await Unit.findById(req.params.id);
@@ -47,8 +49,10 @@ const updateUnit = async (req, res) => {
             unit.property = property || unit.property;
             unit.unitNumber = unitNumber || unit.unitNumber;
             unit.type = type || unit.type;
-            unit.rentPrice = rentPrice || unit.rentPrice;
+            unit.rentAmount = rentAmount || unit.rentAmount;
             unit.status = status || unit.status;
+            unit.bedrooms = bedrooms || unit.bedrooms;
+            unit.bathrooms = bathrooms || unit.bathrooms;
 
             const updatedUnit = await unit.save();
             res.json(updatedUnit);

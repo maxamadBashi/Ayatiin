@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/PropertyCard';
+import PropertyModal from '../components/PropertyModal';
 import axios from '../utils/axios';
 import { Plus } from 'lucide-react';
 
 const Properties = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentProperty, setCurrentProperty] = useState(null);
 
     useEffect(() => {
         fetchProperties();
@@ -18,9 +21,9 @@ const Properties = () => {
         } catch (error) {
             console.log('Using dummy properties');
             setProperties([
-                { _id: '1', name: 'Sunset Apartments', location: '123 Main St, City', description: 'Luxury apartments with ocean view' },
-                { _id: '2', name: 'Green Valley Homes', location: '456 Oak Ave, Suburb', description: 'Family friendly community with parks' },
-                { _id: '3', name: 'Urban Lofts', location: '789 Downtown Blvd', description: 'Modern lofts in the heart of the city' },
+                { _id: '1', name: 'Sunset Apartments', address: '123 Main St, City', type: 'residential', description: 'Luxury apartments with ocean view' },
+                { _id: '2', name: 'Green Valley Homes', address: '456 Oak Ave, Suburb', type: 'residential', description: 'Family friendly community with parks' },
+                { _id: '3', name: 'Urban Lofts', address: '789 Downtown Blvd', type: 'commercial', description: 'Modern lofts in the heart of the city' },
             ]);
         } finally {
             setLoading(false);
@@ -34,22 +37,51 @@ const Properties = () => {
                 setProperties(properties.filter(p => p._id !== id));
             } catch (error) {
                 console.error('Error deleting property', error);
-                // For dummy data simulation
                 setProperties(properties.filter(p => p._id !== id));
             }
         }
     };
 
     const handleEdit = (property) => {
-        console.log('Edit property', property);
-        // Implement edit modal logic here
+        setCurrentProperty(property);
+        setIsModalOpen(true);
+    };
+
+    const handleAdd = () => {
+        setCurrentProperty(null);
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = async (formData) => {
+        try {
+            const config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            };
+
+            if (currentProperty) {
+                const { data } = await axios.put(`/properties/${currentProperty._id}`, formData, config);
+                setProperties(properties.map(p => p._id === currentProperty._id ? data : p));
+            } else {
+                const { data } = await axios.post('/properties', formData, config);
+                setProperties([...properties, data]);
+            }
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error('Error saving property', error);
+            alert('Failed to save property');
+        }
     };
 
     return (
-        <div>
+        <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">Properties</h1>
-                <button className="btn-primary flex items-center gap-2">
+                <button
+                    onClick={handleAdd}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
                     <Plus size={20} />
                     Add Property
                 </button>
@@ -69,6 +101,13 @@ const Properties = () => {
                     ))}
                 </div>
             )}
+
+            <PropertyModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleSubmit}
+                property={currentProperty}
+            />
         </div>
     );
 };
