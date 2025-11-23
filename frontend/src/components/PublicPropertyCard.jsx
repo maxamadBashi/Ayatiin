@@ -1,75 +1,98 @@
 import React from 'react';
-import { MapPin, Bed, Bath, Square, Home } from 'lucide-react';
+import { MapPin, Bed, Bath, Square, Home, Sparkles, ArrowRight } from 'lucide-react';
 
 const PublicPropertyCard = ({ property, onBook, onBuy }) => {
+    const statusColors = {
+        available: 'bg-green-500 text-white',
+        rented: 'bg-blue-500 text-white',
+        sold: 'bg-gray-500 text-white'
+    };
+
     return (
-        <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-100">
-            {/* Image Section */}
-            <div className="relative h-56">
+        <div className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 transform hover:-translate-y-2">
+            {/* Image Section with Overlay */}
+            <div className="relative h-64 overflow-hidden">
                 <img
                     src={property.images && property.images.length > 0
                         ? `http://localhost:5000${property.images[0].startsWith('/') ? '' : '/'}${property.images[0]}`
                         : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={property.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
                     }}
                 />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider text-[#1e3a8a] shadow-sm">
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Status Badge */}
+                <div className={`absolute top-4 right-4 ${statusColors[property.status] || 'bg-blue-600 text-white'} px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-sm`}>
                     {property.status}
+                </div>
+                
+                {/* Type Badge */}
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-semibold text-gray-800 shadow-md">
+                    {property.type}
                 </div>
             </div>
 
             {/* Content Section */}
-            <div className="p-5">
+            <div className="p-6">
                 <div className="mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">{property.name}</h3>
-                    <p className="text-sm text-gray-500 line-clamp-1">{property.description || 'Beautiful property for you'}</p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                        {property.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                        <MapPin size={14} className="text-blue-600" />
+                        <span className="line-clamp-1">{property.location || 'Location not specified'}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 line-clamp-2">{property.description || 'Beautiful property in a prime location'}</p>
                 </div>
 
-                <div className="flex justify-between items-end mb-4">
-                    <div>
-                        <p className="text-2xl font-bold text-[#4f46e5]">
-                            ${property.price?.toLocaleString() || 'N/A'}
-                        </p>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-sm font-medium text-gray-500">{property.location || 'Unknown'}</p>
+                {/* Price Section - Always Visible */}
+                <div className="mb-5 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                            {property.price ? `$${property.price.toLocaleString()}` : 'Price on Request'}
+                        </span>
+                        {(property.type === 'Apartment' || property.type === 'House' || property.type === 'Villa') && property.price ? (
+                            <span className="text-sm text-gray-600">/month</span>
+                        ) : property.price ? (
+                            <span className="text-sm text-gray-600">total</span>
+                        ) : null}
                     </div>
                 </div>
 
-                {/* Amenities/Details Footer */}
-                <div className="flex items-center justify-between py-3 border-t border-gray-100 text-gray-500 text-sm mb-4">
-                    {property.type.includes('Land') ? (
+                {/* Amenities/Details */}
+                <div className="flex items-center justify-between py-4 border-t border-gray-100 text-gray-600 text-sm mb-5">
+                    {property.type && property.type.includes('Land') ? (
                         <>
-                            <div className="flex items-center gap-1">
-                                <Square size={16} />
-                                <span>{property.size || 'N/A'}</span>
+                            <div className="flex items-center gap-2">
+                                <Square size={18} className="text-blue-600" />
+                                <span className="font-medium">{property.size || 'N/A'}</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <MapPin size={16} />
-                                <span>{property.dimensions || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <Home size={16} />
-                                <span>{property.type}</span>
+                            <div className="flex items-center gap-2">
+                                <MapPin size={18} className="text-blue-600" />
+                                <span className="font-medium">{property.dimensions || 'N/A'}</span>
                             </div>
                         </>
                     ) : (
                         <>
-                            <div className="flex items-center gap-1">
-                                <Bed size={16} />
-                                <span>{property.bedrooms || 0} beds</span>
+                            <div className="flex items-center gap-2">
+                                <Bed size={18} className="text-blue-600" />
+                                <span className="font-semibold">{property.bedrooms || 0}</span>
+                                <span className="text-gray-500">Beds</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <Bath size={16} />
-                                <span>{property.bathrooms || 0} baths</span>
+                            <div className="flex items-center gap-2">
+                                <Bath size={18} className="text-blue-600" />
+                                <span className="font-semibold">{property.bathrooms || 0}</span>
+                                <span className="text-gray-500">Baths</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <Square size={16} />
-                                <span>{property.size || property.area || 1200} sq.ft</span>
+                            <div className="flex items-center gap-2">
+                                <Square size={18} className="text-blue-600" />
+                                <span className="font-semibold">{property.size || property.area || 1200}</span>
+                                <span className="text-gray-500">sq.ft</span>
                             </div>
                         </>
                     )}
@@ -79,15 +102,17 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
                 <div className="flex gap-3">
                     <button
                         onClick={() => onBook(property)}
-                        className="flex-1 bg-[#1e3a8a] text-white py-2.5 rounded-lg hover:bg-blue-900 transition-colors font-medium text-sm"
+                        className="group/btn flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-semibold text-sm shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
                     >
-                        Book Now
+                        <Sparkles size={16} />
+                        <span>Book Now</span>
                     </button>
                     <button
                         onClick={() => onBuy(property)}
-                        className="flex-1 border border-[#1e3a8a] text-[#1e3a8a] py-2.5 rounded-lg hover:bg-blue-50 transition-colors font-medium text-sm"
+                        className="flex-1 border-2 border-blue-600 text-blue-600 py-3 rounded-xl hover:bg-blue-50 transition-all duration-300 font-semibold text-sm hover:border-blue-700 hover:text-blue-700 transform hover:scale-105 flex items-center justify-center gap-2"
                     >
-                        Buy Now
+                        <span>Buy Now</span>
+                        <ArrowRight size={16} />
                     </button>
                 </div>
             </div>

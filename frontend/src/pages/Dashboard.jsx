@@ -126,7 +126,7 @@ const Dashboard = () => {
         </div>
         <div className="flex gap-3">
           <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Export Report</button>
-          {(user?.role === 'superadmin' || user?.role === 'manager') && (
+          {(user?.role === 'superadmin' || user?.role === 'manager' || user?.role === 'admin') && (
             <button
               onClick={() => setShowCreateAdmin(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
@@ -229,8 +229,6 @@ const Dashboard = () => {
                     >
                       <option value="customer">Customer</option>
                       <option value="admin">Admin</option>
-                      <option value="manager">Manager</option>
-                      <option value="superadmin" disabled={user.role !== 'superadmin'}>Super Admin</option>
                     </select>
 
                     {(user.role === 'admin' || user.role === 'manager' || user.role === 'superadmin') && u.role !== 'superadmin' && (

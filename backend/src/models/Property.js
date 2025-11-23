@@ -11,7 +11,18 @@ const propertySchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Apartment', 'House', 'Villa', 'Land', 'Commercial', 'Land for Sale', 'Commercial Land', 'Residential Land', 'Farm Land', 'Investment Land'],
+        enum: [
+            'Apartment', 
+            'House', 
+            'Villa', 
+            'Land', 
+            'Commercial',
+            'Land for Sale',
+            'Commercial Land',
+            'Residential Land',
+            'Farm Land',
+            'Investment Land'
+        ],
         default: 'Apartment',
     },
     size: {

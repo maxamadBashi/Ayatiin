@@ -46,6 +46,27 @@ const createProperty = async (req, res) => {
             return res.status(400).json({ message: 'Location is required' });
         }
 
+        // Validate property type
+        const validTypes = [
+            'Apartment', 
+            'House', 
+            'Villa', 
+            'Land', 
+            'Commercial',
+            'Land for Sale',
+            'Commercial Land',
+            'Residential Land',
+            'Farm Land',
+            'Investment Land'
+        ];
+        
+        if (type && !validTypes.includes(type)) {
+            return res.status(400).json({ 
+                message: `Invalid property type. Allowed types are: ${validTypes.join(', ')}`,
+                received: type
+            });
+        }
+
         // Handle image uploads - convert paths to relative URLs
         let images = [];
         if (req.files && req.files.length > 0) {
@@ -123,6 +144,29 @@ const createProperty = async (req, res) => {
 const updateProperty = async (req, res) => {
     try {
         const { name, location, type, description, status, price, bedrooms, bathrooms, size, dimensions } = req.body;
+
+        // Validate property type if provided
+        if (type !== undefined) {
+            const validTypes = [
+                'Apartment', 
+                'House', 
+                'Villa', 
+                'Land', 
+                'Commercial',
+                'Land for Sale',
+                'Commercial Land',
+                'Residential Land',
+                'Farm Land',
+                'Investment Land'
+            ];
+            
+            if (!validTypes.includes(type)) {
+                return res.status(400).json({ 
+                    message: `Invalid property type. Allowed types are: ${validTypes.join(', ')}`,
+                    received: type
+                });
+            }
+        }
 
         // Handle image uploads - convert paths to relative URLs
         let newImages = [];

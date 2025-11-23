@@ -39,9 +39,7 @@ const CreateAdminModal = ({ isOpen, onClose, onSuccess }) => {
         }
     };
 
-    // Determine allowed roles based on current user role
-    const canCreateSuperAdmin = user?.role === 'superadmin';
-    const canCreateManager = user?.role === 'superadmin';
+
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -106,8 +104,6 @@ const CreateAdminModal = ({ isOpen, onClose, onSuccess }) => {
                         >
                             <option value="customer">Customer</option>
                             <option value="admin">Admin</option>
-                            {canCreateManager && <option value="manager">Manager</option>}
-                            {canCreateSuperAdmin && <option value="superadmin">Super Admin</option>}
                         </select>
                     </div>
 
