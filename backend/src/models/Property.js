@@ -11,8 +11,14 @@ const propertySchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Apartment', 'House', 'Villa', 'Land', 'Commercial'],
+        enum: ['Apartment', 'House', 'Villa', 'Land', 'Commercial', 'Land for Sale', 'Commercial Land', 'Residential Land', 'Farm Land', 'Investment Land'],
         default: 'Apartment',
+    },
+    size: {
+        type: String, // e.g., "1200 sqm" or "1 hectare"
+    },
+    dimensions: {
+        type: String, // e.g., "20x30"
     },
     price: {
         type: Number,

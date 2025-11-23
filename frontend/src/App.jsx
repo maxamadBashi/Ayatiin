@@ -4,7 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Properties from './pages/Properties';
-import Units from './pages/Units';
+import Land from './pages/Land';
 import Tenants from './pages/Tenants';
 import Leases from './pages/Leases';
 import Payments from './pages/Payments';
@@ -82,9 +82,9 @@ function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/units" element={
+          <Route path="/land" element={
             <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Units />
+              <Land />
             </ProtectedRoute>
           } />
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Building2,
@@ -10,12 +10,19 @@ import {
     Wrench,
     LogOut,
     MessageSquare,
+    MapPin,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const { logout } = useAuth();
+
+    const handleLogout = () => {
+        navigate('/');
+        logout();
+    };
 
     const isActive = (path) => {
         return location.pathname === path ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800';
@@ -24,7 +31,7 @@ const Sidebar = () => {
     const navItems = [
         { path: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
         { path: '/properties', icon: <Building2 size={20} />, label: 'Properties' },
-        { path: '/units', icon: <DoorOpen size={20} />, label: 'Units' },
+        { path: '/land', icon: <MapPin size={20} />, label: 'Land' },
         { path: '/tenants', icon: <Users size={20} />, label: 'Tenants' },
         { path: '/leases', icon: <FileText size={20} />, label: 'Leases' },
         { path: '/payments', icon: <CreditCard size={20} />, label: 'Payments' },
@@ -54,7 +61,7 @@ const Sidebar = () => {
 
             <div className="p-4 border-t border-gray-800">
                 <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="flex items-center gap-3 px-4 py-3 w-full text-left text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
                 >
                     <LogOut size={20} />

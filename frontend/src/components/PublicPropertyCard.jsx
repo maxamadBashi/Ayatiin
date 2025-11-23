@@ -8,10 +8,14 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
             <div className="relative h-56">
                 <img
                     src={property.images && property.images.length > 0
-                        ? `http://localhost:5000/${property.images[0]}`
+                        ? `http://localhost:5000${property.images[0].startsWith('/') ? '' : '/'}${property.images[0]}`
                         : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={property.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                    }}
                 />
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider text-[#1e3a8a] shadow-sm">
                     {property.status}
@@ -36,20 +40,39 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
                     </div>
                 </div>
 
-                {/* Amenities Footer */}
+                {/* Amenities/Details Footer */}
                 <div className="flex items-center justify-between py-3 border-t border-gray-100 text-gray-500 text-sm mb-4">
-                    <div className="flex items-center gap-1">
-                        <Bed size={16} />
-                        <span>{property.bedrooms || 0} beds</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Bath size={16} />
-                        <span>{property.bathrooms || 0} baths</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Square size={16} />
-                        <span>{property.area || 1200} sq.ft</span>
-                    </div>
+                    {property.type.includes('Land') ? (
+                        <>
+                            <div className="flex items-center gap-1">
+                                <Square size={16} />
+                                <span>{property.size || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <MapPin size={16} />
+                                <span>{property.dimensions || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Home size={16} />
+                                <span>{property.type}</span>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="flex items-center gap-1">
+                                <Bed size={16} />
+                                <span>{property.bedrooms || 0} beds</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Bath size={16} />
+                                <span>{property.bathrooms || 0} baths</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Square size={16} />
+                                <span>{property.size || property.area || 1200} sq.ft</span>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Action Buttons */}

@@ -4,7 +4,7 @@ import PropertyModal from '../components/PropertyModal';
 import axios from '../utils/axios';
 import { Plus } from 'lucide-react';
 
-const Properties = () => {
+const Land = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,31 +17,32 @@ const Properties = () => {
     const fetchProperties = async () => {
         try {
             const { data } = await axios.get('/properties');
-            // Filter out Land types (show only buildings)
-            const buildingProperties = data.filter(p =>
-                !p.type.includes('Land')
+            // Filter for Land types
+            const landProperties = data.filter(p =>
+                p.type === 'Land' ||
+                p.type === 'Land for Sale' ||
+                p.type === 'Commercial Land' ||
+                p.type === 'Residential Land' ||
+                p.type === 'Farm Land' ||
+                p.type === 'Investment Land'
             );
-            setProperties(buildingProperties);
+            setProperties(landProperties);
         } catch (error) {
-            console.log('Using dummy properties');
-            setProperties([
-                { _id: '1', name: 'Sunset Apartments', address: '123 Main St, City', type: 'residential', description: 'Luxury apartments with ocean view' },
-                { _id: '2', name: 'Green Valley Homes', address: '456 Oak Ave, Suburb', type: 'residential', description: 'Family friendly community with parks' },
-                { _id: '3', name: 'Urban Lofts', address: '789 Downtown Blvd', type: 'commercial', description: 'Modern lofts in the heart of the city' },
-            ]);
+            console.log('Error fetching properties', error);
+            setProperties([]);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this property?')) {
+        if (window.confirm('Are you sure you want to delete this land property?')) {
             try {
                 await axios.delete(`/properties/${id}`);
                 setProperties(properties.filter(p => p._id !== id));
             } catch (error) {
                 console.error('Error deleting property', error);
-                setProperties(properties.filter(p => p._id !== id));
+                alert('Failed to delete property');
             }
         }
     };
@@ -52,7 +53,7 @@ const Properties = () => {
     };
 
     const handleAdd = () => {
-        setCurrentProperty(null);
+        setCurrentProperty({ type: 'Land' }); // Set default type for new land
         setIsModalOpen(true);
     };
 
@@ -64,11 +65,12 @@ const Properties = () => {
                 },
             };
 
-            if (currentProperty) {
+            if (currentProperty && currentProperty._id) {
                 const { data } = await axios.put(`/properties/${currentProperty._id}`, formData, config);
                 setProperties(properties.map(p => p._id === currentProperty._id ? data : p));
             } else {
                 const { data } = await axios.post('/properties', formData, config);
+                // Only add to list if it's a land type (it should be, but good to check or just add)
                 setProperties([...properties, data]);
             }
             setIsModalOpen(false);
@@ -82,18 +84,20 @@ const Properties = () => {
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Properties</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Land Management</h1>
                 <button
                     onClick={handleAdd}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                     <Plus size={20} />
-                    Add Property
+                    Add Land
                 </button>
             </div>
 
             {loading ? (
                 <div className="text-center py-10">Loading...</div>
+            ) : properties.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">No land properties found.</div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {properties.map((property) => (
@@ -112,9 +116,10 @@ const Properties = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleSubmit}
                 property={currentProperty}
+                isLand={true}
             />
         </div>
     );
 };
 
-export default Properties;
+export default Land;

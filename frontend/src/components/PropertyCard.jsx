@@ -16,9 +16,13 @@ const PropertyCard = ({ property, onDelete, onEdit }) => {
       <div className="h-48 w-full bg-gray-200 relative">
         {property.images && property.images.length > 0 ? (
           <img
-            src={`http://localhost:5000/${property.images[0]}`}
+            src={`http://localhost:5000${property.images[0].startsWith('/') ? '' : '/'}${property.images[0]}`}
             alt={property.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">

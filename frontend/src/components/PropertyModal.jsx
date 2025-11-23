@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-const PropertyModal = ({ isOpen, onClose, onSubmit, property }) => {
+const PropertyModal = ({ isOpen, onClose, onSubmit, property, isLand }) => {
     const [formData, setFormData] = useState({
         name: '',
         location: '',
-        type: 'Apartment',
+        type: isLand ? 'Land' : 'Apartment',
         description: '',
         status: 'available',
         price: '',
@@ -25,18 +25,22 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, property }) => {
                 price: property.price || '',
                 bedrooms: property.bedrooms || '',
                 bathrooms: property.bathrooms || '',
+                size: property.size || '',
+                dimensions: property.dimensions || '',
             });
             setImages([]); // Reset images on edit open
         } else {
             setFormData({
                 name: '',
                 location: '',
-                type: 'Apartment',
+                type: isLand ? 'Land' : 'Apartment',
                 description: '',
                 status: 'available',
                 price: '',
                 bedrooms: '',
                 bathrooms: '',
+                size: '',
+                dimensions: '',
             });
             setImages([]);
         }
@@ -62,6 +66,8 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, property }) => {
         if (formData.price) data.append('price', Number(formData.price));
         if (formData.bedrooms) data.append('bedrooms', Number(formData.bedrooms));
         if (formData.bathrooms) data.append('bathrooms', Number(formData.bathrooms));
+        if (formData.size) data.append('size', formData.size);
+        if (formData.dimensions) data.append('dimensions', formData.dimensions);
 
         for (let i = 0; i < images.length; i++) {
             data.append('images', images[i]);
@@ -113,8 +119,55 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, property }) => {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
+                    {!formData.type.includes('Land') && (
+                        <>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Price
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        value={formData.price}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Bedrooms
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="bedrooms"
+                                        value={formData.bedrooms}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Bathrooms
+                                </label>
+                                <input
+                                    type="number"
+                                    name="bathrooms"
+                                    value={formData.bathrooms}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {formData.type.includes('Land') && (
+                        <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Price
                             </label>
@@ -127,34 +180,36 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, property }) => {
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Bedrooms
-                            </label>
-                            <input
-                                type="number"
-                                name="bedrooms"
-                                value={formData.bedrooms}
-                                onChange={handleChange}
-                                required
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
+                    )}
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Bathrooms
-                        </label>
-                        <input
-                            type="number"
-                            name="bathrooms"
-                            value={formData.bathrooms}
-                            onChange={handleChange}
-                            required
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
+                    {formData.type.includes('Land') && (
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Size (e.g., 1200 sqm)
+                                </label>
+                                <input
+                                    type="text"
+                                    name="size"
+                                    value={formData.size || ''}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Dimensions (e.g., 20x30)
+                                </label>
+                                <input
+                                    type="text"
+                                    name="dimensions"
+                                    value={formData.dimensions || ''}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
@@ -167,11 +222,23 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, property }) => {
                                 onChange={handleChange}
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
-                                <option value="Apartment">Apartment</option>
-                                <option value="House">House</option>
-                                <option value="Villa">Villa</option>
-                                <option value="Land">Land</option>
-                                <option value="Commercial">Commercial</option>
+                                {isLand ? (
+                                    <>
+                                        <option value="Land">Land</option>
+                                        <option value="Land for Sale">Land for Sale</option>
+                                        <option value="Commercial Land">Commercial Land</option>
+                                        <option value="Residential Land">Residential Land</option>
+                                        <option value="Farm Land">Farm Land</option>
+                                        <option value="Investment Land">Investment Land</option>
+                                    </>
+                                ) : (
+                                    <>
+                                        <option value="Apartment">Apartment</option>
+                                        <option value="House">House</option>
+                                        <option value="Villa">Villa</option>
+                                        <option value="Commercial">Commercial</option>
+                                    </>
+                                )}
                             </select>
                         </div>
                         <div>
