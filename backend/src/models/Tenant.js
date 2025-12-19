@@ -23,6 +23,20 @@ const tenantSchema = new mongoose.Schema({
         enum: ['active', 'inactive'],
         default: 'active',
     },
+    leaseStartDate: {
+        type: Date,
+    },
+    leaseEndDate: {
+        type: Date,
+    },
+    deposit: {
+        type: Number,
+    },
+    emergencyContact: {
+        name: String,
+        phone: String,
+        relation: String,
+    },
 }, {
     timestamps: true,
 });

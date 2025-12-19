@@ -29,6 +29,15 @@ const unitSchema = new mongoose.Schema({
         enum: ['available', 'occupied', 'maintenance'],
         default: 'available',
     },
+    size: {
+        type: Number, // in sq ft
+    },
+    floor: {
+        type: Number,
+    },
+    features: [{
+        type: String,
+    }],
 }, {
     timestamps: true,
 });

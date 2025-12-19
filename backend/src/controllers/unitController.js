@@ -5,7 +5,9 @@ const Unit = require('../models/Unit');
 // @access  Private
 const getUnits = async (req, res) => {
     try {
-        const units = await Unit.find({}).populate('property', 'name');
+        const { status } = req.query;
+        const query = status ? { status } : {};
+        const units = await Unit.find(query).populate('property', 'name');
         res.json(units);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -16,7 +18,7 @@ const getUnits = async (req, res) => {
 // @route   POST /api/units
 // @access  Private/Admin
 const createUnit = async (req, res) => {
-    const { property, unitNumber, type, rentAmount, status, bedrooms, bathrooms } = req.body;
+    const { property, unitNumber, type, rentAmount, status, bedrooms, bathrooms, size, floor, features } = req.body;
 
     try {
         const unit = new Unit({
@@ -27,6 +29,9 @@ const createUnit = async (req, res) => {
             status,
             bedrooms,
             bathrooms,
+            size,
+            floor,
+            features,
         });
 
         const createdUnit = await unit.save();
@@ -40,7 +45,7 @@ const createUnit = async (req, res) => {
 // @route   PUT /api/units/:id
 // @access  Private/Admin
 const updateUnit = async (req, res) => {
-    const { property, unitNumber, type, rentAmount, status, bedrooms, bathrooms } = req.body;
+    const { property, unitNumber, type, rentAmount, status, bedrooms, bathrooms, size, floor, features } = req.body;
 
     try {
         const unit = await Unit.findById(req.params.id);
@@ -53,6 +58,9 @@ const updateUnit = async (req, res) => {
             unit.status = status || unit.status;
             unit.bedrooms = bedrooms || unit.bedrooms;
             unit.bathrooms = bathrooms || unit.bathrooms;
+            unit.size = size || unit.size;
+            unit.floor = floor || unit.floor;
+            unit.features = features || unit.features;
 
             const updatedUnit = await unit.save();
             res.json(updatedUnit);
