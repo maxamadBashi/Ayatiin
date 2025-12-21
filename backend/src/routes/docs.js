@@ -14,7 +14,7 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:5000/api',
+                url: 'https://ayatiin-backend-1.onrender.com/api',
                 description: 'Local server',
             },
         ],

@@ -14,7 +14,7 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
             <div className="relative h-64 overflow-hidden">
                 <img
                     src={property.images && property.images.length > 0
-                        ? `http://localhost:5000${property.images[0].startsWith('/') ? '' : '/'}${property.images[0]}`
+                        ? `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}${property.images[0].startsWith('/') ? '' : '/'}${property.images[0]}`
                         : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={property.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -25,12 +25,12 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
                 />
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                
+
                 {/* Status Badge */}
                 <div className={`absolute top-4 right-4 ${statusColors[property.status] || 'bg-blue-600 text-white'} px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-sm`}>
                     {property.status}
                 </div>
-                
+
                 {/* Type Badge */}
                 <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-semibold text-gray-800 shadow-md">
                     {property.type}

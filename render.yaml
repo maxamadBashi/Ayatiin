@@ -1,0 +1,24 @@
+services:
+  # Frontend Service
+  - type: static
+    name: ayatiin-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://ayatiin-backend-1.onrender.com/api
+      - key: VITE_BACKEND_URL
+        value: https://ayatiin-backend-1.onrender.com
+
+  # Backend Service
+  - type: web
+    name: ayatiin-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
