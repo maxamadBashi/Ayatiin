@@ -40,7 +40,9 @@ const UnitCard = ({ unit, onDelete, onEdit }) => {
                 </div>
                 <div className="text-right">
                     <p className="text-xs text-gray-500 uppercase">Rent</p>
-                    <p className="text-lg font-bold text-blue-600">${unit.rentPrice}</p>
+                    <p className="text-lg font-bold text-blue-600">
+                        ${typeof unit.rentAmount !== 'undefined' ? unit.rentAmount : unit.rentPrice}
+                    </p>
                 </div>
             </div>
 

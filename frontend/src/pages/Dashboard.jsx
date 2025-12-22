@@ -17,8 +17,10 @@ const Dashboard = () => {
     totalUnits: 0,
     occupiedUnits: 0,
     availableUnits: 0,
+    availableUnits: 0,
     maintenanceRequests: 0,
     customerRequests: 0,
+    landProperties: 0,
   });
 
   const [revenueData, setRevenueData] = useState([
@@ -61,6 +63,7 @@ const Dashboard = () => {
         availableUnits: 5,
         maintenanceRequests: 3,
         customerRequests: 2,
+        landProperties: 4,
       });
     }
   };
@@ -139,10 +142,15 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          title="Total Properties"
           value={stats.totalProperties}
           icon={<Building2 size={24} />}
           color="bg-blue-600"
+        />
+        <StatCard
+          title="Total Land"
+          value={stats.landProperties}
+          icon={<Building2 size={24} />}
+          color="bg-emerald-600"
         />
         <StatCard
           title="Available Properties"
@@ -167,6 +175,12 @@ const Dashboard = () => {
           value={stats.totalCustomers}
           icon={<Users size={24} />}
           color="bg-indigo-600"
+        />
+        <StatCard
+          title="Maintenance Pending"
+          value={stats.maintenanceRequests}
+          icon={<Wrench size={24} />}
+          color="bg-red-600"
         />
         <Link to="/requests" className="block">
           <div className="bg-white rounded-xl shadow-sm p-6 flex items-center border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">

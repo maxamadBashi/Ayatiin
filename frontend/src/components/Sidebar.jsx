@@ -26,7 +26,11 @@ const Sidebar = () => {
         { path: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
         { path: '/properties', icon: <Building2 size={20} />, label: 'Properties' },
         { path: '/land', icon: <MapPin size={20} />, label: 'Land' },
+        // Units & Tenants ku dar sidebar-ka
+        { path: '/units', icon: <DoorOpen size={20} />, label: 'Units' },
+        { path: '/tenants', icon: <Users size={20} />, label: 'Tenants' },
         { path: '/requests', icon: <MessageSquare size={20} />, label: 'Requests' },
+        { path: '/maintenance', icon: <Wrench size={20} />, label: 'Maintenance' },
     ];
 
     return (

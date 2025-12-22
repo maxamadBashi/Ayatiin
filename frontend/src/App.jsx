@@ -13,6 +13,7 @@ import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import { useAuth } from './context/AuthContext';
 import Requests from './pages/Requests';
+import Units from './pages/Units';
 
 import CustomerDashboard from './pages/CustomerDashboard';
 
@@ -91,6 +92,12 @@ function App() {
           <Route path="/tenants" element={
             <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
               <Tenants />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/units" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+              <Units />
             </ProtectedRoute>
           } />
 

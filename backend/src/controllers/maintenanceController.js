@@ -1,4 +1,5 @@
 const Maintenance = require('../models/Maintenance');
+const Tenant = require('../models/Tenant');
 
 // @desc    Get all maintenance requests
 // @route   GET /api/maintenance
@@ -61,8 +62,50 @@ const updateMaintenanceRequest = async (req, res) => {
     }
 };
 
+// @desc    Delete a maintenance request
+// @route   DELETE /api/maintenance/:id
+// @access  Private
+const deleteMaintenanceRequest = async (req, res) => {
+    try {
+        const request = await Maintenance.findById(req.params.id);
+
+        if (request) {
+            await request.deleteOne();
+            res.json({ message: 'Maintenance request removed' });
+        } else {
+            res.status(404).json({ message: 'Maintenance request not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get logged in user's maintenance requests
+// @route   GET /api/maintenance/my
+// @access  Private (Customer)
+const getMyMaintenanceRequests = async (req, res) => {
+    try {
+        // Find tenant by user's email
+        const tenant = await Tenant.findOne({ email: req.user.email });
+
+        if (!tenant) {
+            return res.json([]); // Return empty if user is not a tenant
+        }
+
+        const requests = await Maintenance.find({ tenant: tenant._id })
+            .populate('property', 'name')
+            .populate('unit', 'unitNumber');
+
+        res.json(requests);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getMaintenanceRequests,
     createMaintenanceRequest,
     updateMaintenanceRequest,
+    deleteMaintenanceRequest,
+    getMyMaintenanceRequests,
 };

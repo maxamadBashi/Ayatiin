@@ -66,6 +66,7 @@ const Maintenance = () => {
                 setRequests(requests.map(r => r._id === currentRequest._id ? updatedRequest : r));
             } else {
                 const { data } = await axios.post('/maintenance', formData);
+                // Manually populate for immediate UI update
                 const newRequest = {
                     ...data,
                     unit: units.find(u => u._id === formData.unit),
@@ -77,6 +78,18 @@ const Maintenance = () => {
         } catch (error) {
             console.error('Error saving request', error);
             setIsModalOpen(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this maintenance request?')) {
+            try {
+                await axios.delete(`/maintenance/${id}`);
+                setRequests(requests.filter(req => req._id !== id));
+            } catch (error) {
+                console.error('Error deleting request:', error);
+                alert('Failed to delete request');
+            }
         }
     };
 
@@ -132,6 +145,12 @@ const Maintenance = () => {
                             >
                                 Update
                             </button>
+                            <button
+                                onClick={() => handleDelete(req._id)}
+                                className="text-sm text-red-600 hover:text-red-700"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
                 ))}
@@ -144,7 +163,7 @@ const Maintenance = () => {
                 request={currentRequest}
                 units={units}
             />
-        </div>
+        </div >
     );
 };
 

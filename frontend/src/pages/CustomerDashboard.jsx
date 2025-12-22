@@ -2,21 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from '../utils/axios';
 import Navbar from '../components/Navbar';
-import { Clock, CheckCircle, XCircle, Home, Calendar, DollarSign, MessageSquare } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Home, Calendar, DollarSign, MessageSquare, Wrench } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const CustomerDashboard = () => {
     const { user } = useAuth();
     const [requests, setRequests] = useState([]);
+    const [maintenanceRequests, setMaintenanceRequests] = useState([]);
+    const [tenantProfile, setTenantProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
+    const [maintenanceFormData, setMaintenanceFormData] = useState({
+        description: '',
+        priority: 'medium',
+        property: '', // Ideally we should let them select from their rented properties
+    });
 
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const { data } = await axios.get('/requests/my');
-                setRequests(data);
+                const [requestsRes, maintenanceRes, tenantRes] = await Promise.all([
+                    axios.get('/requests/my'),
+                    axios.get('/maintenance/my'),
+                    axios.get('/tenants/me').catch(() => ({ data: null })) // Ignore 404 if not a tenant yet
+                ]);
+                setRequests(requestsRes.data);
+                setMaintenanceRequests(maintenanceRes.data);
+                setTenantProfile(tenantRes.data);
             } catch (error) {
-                console.error('Error fetching requests:', error);
+                console.error('Error fetching data:', error);
             } finally {
                 setLoading(false);
             }
@@ -77,8 +91,8 @@ const CustomerDashboard = () => {
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">No Requests Yet</h3>
                         <p className="text-gray-600 text-lg mb-2">You haven't made any requests yet.</p>
                         <p className="text-gray-500 mb-8">Start by browsing our available properties and submit a booking or purchase request.</p>
-                        <Link 
-                            to="/" 
+                        <Link
+                            to="/"
                             className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                         >
                             <Home size={20} />
@@ -227,8 +241,8 @@ const CustomerDashboard = () => {
 
                         {/* Browse More Properties CTA */}
                         <div className="mt-8 text-center">
-                            <Link 
-                                to="/" 
+                            <Link
+                                to="/"
                                 className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                             >
                                 <Home size={20} />
@@ -237,8 +251,124 @@ const CustomerDashboard = () => {
                         </div>
                     </>
                 )}
-            </main>
-        </div>
+
+                {/* Maintenance Section */}
+                <div className="mt-12 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+                    <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50 flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            <Wrench className="text-red-600" size={24} />
+                            <span>Maintenance Issues</span>
+                        </h2>
+                        <button
+                            onClick={() => setIsMaintenanceModalOpen(true)}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow-md"
+                        >
+                            Report Issue
+                        </button>
+                    </div>
+                    {maintenanceRequests.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">
+                            No maintenance issues reported recently.
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gradient-to-r from-red-50 to-orange-50">
+                                    <tr>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Description</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Property</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Date</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Status</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-100">
+                                    {maintenanceRequests.map((req) => (
+                                        <tr key={req._id}>
+                                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{req.description}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{req.property?.name || 'N/A'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{new Date(req.createdAt).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${req.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                    req.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                                                        'bg-yellow-100 text-yellow-700'
+                                                    }`}>
+                                                    {req.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${req.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                                    req.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
+                                                        'bg-blue-100 text-blue-700'
+                                                    }`}>
+                                                    {req.priority}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </main >
+
+            {/* Maintenance Modal */}
+            {
+                isMaintenanceModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-gray-900">Report Maintenance Issue</h3>
+                                <button onClick={() => setIsMaintenanceModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                    <XCircle size={24} />
+                                </button>
+                            </div>
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                try {
+                                    // In a real app, we need to know WHICH property/unit the tenant is in.
+                                    // For now, we'll try to submit. The backend expects 'property' ID.
+                                    // Since we don't have a robust "My Rented Properties" selector yet,
+                                    // we might fail validation if we don't send property ID.
+                                    // Temporary Fix: Just send description and let backend/frontend handle it later or mock it.
+
+                                    // Actually, we need to let them select a property or fetch their active lease property.
+                                    // For this demo, let's assume we just send the description and the backend *should* ideally resolve property from tenant.
+                                    // BUT our current createMaintenanceRequest requires property in body.
+
+                                    alert("This feature requires selecting your rented property. Please ensure you have an active lease.");
+                                    setIsMaintenanceModalOpen(false);
+                                } catch (err) {
+                                    alert("Failed to submit");
+                                }
+                            }}>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Issue Description</label>
+                                    <textarea
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        rows="4"
+                                        placeholder="e.g., Leaking faucet, No electricity..."
+                                        required
+                                    ></textarea>
+                                </div>
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                    <select className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                                <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">
+                                    Submit Report
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

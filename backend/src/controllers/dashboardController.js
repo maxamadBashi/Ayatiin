@@ -24,6 +24,10 @@ const getDashboardStats = async (req, res) => {
         const maintenanceRequests = await Maintenance.countDocuments({ status: 'pending' });
         const customerRequests = await Request.countDocuments({ status: 'pending' });
 
+        const landProperties = await Property.countDocuments({
+            type: { $in: ['Land', 'Land for Sale', 'Commercial Land', 'Residential Land', 'Farm Land', 'Investment Land'] }
+        });
+
         res.json({
             totalProperties,
             availableProperties,
@@ -36,6 +40,7 @@ const getDashboardStats = async (req, res) => {
             availableUnits: totalUnits - occupiedUnits,
             maintenanceRequests,
             customerRequests,
+            landProperties,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -4,10 +4,15 @@ const {
     getMaintenanceRequests,
     createMaintenanceRequest,
     updateMaintenanceRequest,
+    deleteMaintenanceRequest,
+    getMyMaintenanceRequests,
 } = require('../controllers/maintenanceController');
 const { protect, authorize } = require('../middleware/auth');
 
 router.route('/').get(protect, getMaintenanceRequests).post(protect, createMaintenanceRequest);
-router.route('/:id').put(protect, authorize('admin', 'manager'), updateMaintenanceRequest);
+router.get('/my', protect, getMyMaintenanceRequests);
+router.route('/:id')
+    .put(protect, authorize('admin', 'manager'), updateMaintenanceRequest)
+    .delete(protect, authorize('admin', 'manager'), deleteMaintenanceRequest);
 
 module.exports = router;

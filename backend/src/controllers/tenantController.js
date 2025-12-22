@@ -117,9 +117,35 @@ const deleteTenant = async (req, res) => {
   }
 };
 
+// @desc    Get logged in user's tenant profile
+// @route   GET /api/tenants/me
+// @access  Private (Customer)
+const getMyTenantProfile = async (req, res) => {
+  try {
+    const tenant = await Tenant.findOne({ email: req.user.email })
+      .populate({
+        path: 'unit',
+        select: 'unitNumber property',
+        populate: {
+          path: 'property',
+          select: 'name'
+        }
+      });
+
+    if (tenant) {
+      res.json(tenant);
+    } else {
+      res.status(404).json({ message: 'Tenant profile not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getTenants,
   createTenant,
   updateTenant,
   deleteTenant,
+  getMyTenantProfile,
 };

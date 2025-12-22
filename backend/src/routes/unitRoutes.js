@@ -8,10 +8,15 @@ const {
 } = require('../controllers/unitController');
 const { protect, authorize } = require('../middleware/auth');
 
-router.route('/').get(protect, getUnits).post(protect, authorize('admin'), createUnit);
+// Allow same admin roles here as properties (admin, manager, superadmin)
+router
+    .route('/')
+    .get(protect, getUnits)
+    .post(protect, authorize('admin', 'manager', 'superadmin'), createUnit);
+
 router
     .route('/:id')
-    .put(protect, authorize('admin'), updateUnit)
-    .delete(protect, authorize('admin'), deleteUnit);
+    .put(protect, authorize('admin', 'manager', 'superadmin'), updateUnit)
+    .delete(protect, authorize('admin', 'manager', 'superadmin'), deleteUnit);
 
 module.exports = router;

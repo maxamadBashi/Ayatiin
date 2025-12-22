@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, DollarSign, MessageSquare, Sparkles, Home, MapPin } from 'lucide-react';
 
 const RequestModal = ({ isOpen, onClose, onSubmit, property, type }) => {
@@ -7,16 +7,65 @@ const RequestModal = ({ isOpen, onClose, onSubmit, property, type }) => {
         amount: '',
         message: '',
     });
+    const [amountError, setAmountError] = useState('');
+
+    // Marka modal-ku furmo ama property-ga/ nooca request-ka is beddelo,
+    // si toos ah ugu buuxi amount-ka qiimaha uu admin-ka u dejiyey guriga.
+    useEffect(() => {
+        if (!isOpen) return;
+
+        if (property?.price) {
+            setFormData((prev) => ({
+                ...prev,
+                amount: property.price.toString(),
+            }));
+            setAmountError('');
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                amount: '',
+            }));
+        }
+    }, [isOpen, property, type]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+
+        if (name === 'amount' && property?.price) {
+            const num = Number(value || '0');
+            const expected = Number(property.price);
+            if (Number.isNaN(num)) {
+                setAmountError('Please enter a valid number.');
+            } else if (num !== expected) {
+                setAmountError(
+                    `Lacagta waa in ay la mid noqotaa qiimaha guriga: $${expected.toLocaleString()}`
+                );
+            } else {
+                setAmountError('');
+            }
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Hubi in amount-ka uu la mid yahay qiimaha property-ga uu admin-ku dejiyey
+        if (property?.price) {
+            const num = Number(formData.amount || '0');
+            const expected = Number(property.price);
+            if (Number.isNaN(num) || num !== expected) {
+                alert(
+                    `Fadlan geli lacagta saxda ah ee gurigan: $${expected.toLocaleString()}. ` +
+                    'Booking/Buy lama aqbali karo ilaa lacagtu la mid noqoto tan uu admin-ku soo geliyay.'
+                );
+                return;
+            }
+        }
+
         onSubmit(formData);
         setFormData({ visitDate: '', amount: '', message: '' });
+        setAmountError('');
     };
 
     if (!isOpen) return null;
