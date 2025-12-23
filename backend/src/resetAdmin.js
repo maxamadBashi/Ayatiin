@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const User = require('./models/User');
 const connectDB = require('./config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Load env vars
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
