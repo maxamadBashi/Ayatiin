@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://ayatiin-backend.onrender.com',
 });
 
 // Add a request interceptor to add the token to requests
