@@ -1,12 +1,18 @@
-const Property = require('../models/Property');
+const { prisma } = require('../config/db');
 
 // @desc    Get all properties
 // @route   GET /api/properties
 // @access  Private
 const getProperties = async (req, res) => {
     try {
-        const properties = await Property.find({});
-        res.json(properties);
+        const properties = await prisma.property.findMany({
+            include: {
+                units: true
+            }
+        });
+        // Map id to _id for frontend compatibility
+        const mappedProperties = properties.map(p => ({ ...p, _id: p.id }));
+        res.json(mappedProperties);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -17,9 +23,14 @@ const getProperties = async (req, res) => {
 // @access  Private
 const getPropertyById = async (req, res) => {
     try {
-        const property = await Property.findById(req.params.id);
+        const property = await prisma.property.findUnique({
+            where: { id: req.params.id },
+            include: {
+                units: true
+            }
+        });
         if (property) {
-            res.json(property);
+            res.json({ ...property, _id: property.id });
         } else {
             res.status(404).json({ message: 'Property not found' });
         }
@@ -33,12 +44,9 @@ const getPropertyById = async (req, res) => {
 // @access  Private/Admin
 const createProperty = async (req, res) => {
     try {
-        console.log('Creating property - Request body:', req.body);
-        console.log('Files received:', req.files ? req.files.length : 0);
-
         const { name, location, type, description, status, price, bedrooms, bathrooms, size, dimensions } = req.body;
 
-        // Validate required fields first
+        // Validate required fields
         if (!name || !name.trim()) {
             return res.status(400).json({ message: 'Property name is required' });
         }
@@ -48,10 +56,10 @@ const createProperty = async (req, res) => {
 
         // Validate property type
         const validTypes = [
-            'Apartment', 
-            'House', 
-            'Villa', 
-            'Land', 
+            'Apartment',
+            'House',
+            'Villa',
+            'Land',
             'Commercial',
             'Land for Sale',
             'Commercial Land',
@@ -59,81 +67,41 @@ const createProperty = async (req, res) => {
             'Farm Land',
             'Investment Land'
         ];
-        
+
         if (type && !validTypes.includes(type)) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: `Invalid property type. Allowed types are: ${validTypes.join(', ')}`,
                 received: type
             });
         }
 
-        // Handle image uploads - convert paths to relative URLs
+        // Handle image uploads
         let images = [];
         if (req.files && req.files.length > 0) {
             images = req.files.map(file => `/uploads/${file.filename}`);
-            console.log('Image paths:', images);
         }
 
-        const propertyData = {
-            name: name.trim(),
-            location: location.trim(),
-            type: type || 'Apartment',
-            description: description?.trim() || '',
-            status: status || 'available',
-            size: size || '',
-            dimensions: dimensions || '',
-            images,
-        };
-
-        // Parse numeric fields
-        if (price !== undefined && price !== null && price !== '') {
-            propertyData.price = Number(price);
-            if (isNaN(propertyData.price)) {
-                return res.status(400).json({ message: 'Price must be a valid number' });
-            }
-        }
-        if (bedrooms !== undefined && bedrooms !== null && bedrooms !== '') {
-            propertyData.bedrooms = Number(bedrooms);
-            if (isNaN(propertyData.bedrooms)) {
-                return res.status(400).json({ message: 'Bedrooms must be a valid number' });
-            }
-        }
-        if (bathrooms !== undefined && bathrooms !== null && bathrooms !== '') {
-            propertyData.bathrooms = Number(bathrooms);
-            if (isNaN(propertyData.bathrooms)) {
-                return res.status(400).json({ message: 'Bathrooms must be a valid number' });
-            }
-        }
-
-        console.log('Property data to save:', propertyData);
-
-        const property = new Property(propertyData);
-        const createdProperty = await property.save();
-
-        console.log('Property created successfully:', createdProperty._id);
-        res.status(201).json(createdProperty);
-    } catch (error) {
-        console.error('Error creating property:', error);
-        console.error('Error details:', {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
+        const property = await prisma.property.create({
+            data: {
+                name: name.trim(),
+                location: location.trim(),
+                type: type || 'Apartment',
+                description: description?.trim() || '',
+                status: status || 'available',
+                size: size || '',
+                dimensions: dimensions || '',
+                price: price ? parseFloat(price) : null,
+                bedrooms: bedrooms ? parseInt(bedrooms) : null,
+                bathrooms: bathrooms ? parseInt(bathrooms) : null,
+                images,
+            },
         });
 
-        // Handle validation errors
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(err => err.message).join(', ');
-            return res.status(400).json({ message: messages });
-        }
-
-        // Handle duplicate key errors
-        if (error.code === 11000) {
-            return res.status(400).json({ message: 'Property with this name already exists' });
-        }
-
+        res.status(201).json({ ...property, _id: property.id });
+    } catch (error) {
+        console.error('Error creating property:', error);
         res.status(500).json({
-            message: error.message || 'Error creating property',
-            ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+            message: error.message || 'Error creating property'
         });
     }
 };
@@ -145,73 +113,44 @@ const updateProperty = async (req, res) => {
     try {
         const { name, location, type, description, status, price, bedrooms, bathrooms, size, dimensions } = req.body;
 
-        // Validate property type if provided
-        if (type !== undefined) {
-            const validTypes = [
-                'Apartment', 
-                'House', 
-                'Villa', 
-                'Land', 
-                'Commercial',
-                'Land for Sale',
-                'Commercial Land',
-                'Residential Land',
-                'Farm Land',
-                'Investment Land'
-            ];
-            
-            if (!validTypes.includes(type)) {
-                return res.status(400).json({ 
-                    message: `Invalid property type. Allowed types are: ${validTypes.join(', ')}`,
-                    received: type
-                });
-            }
-        }
-
-        // Handle image uploads - convert paths to relative URLs
+        // Handle image uploads
         let newImages = [];
         if (req.files && req.files.length > 0) {
             newImages = req.files.map(file => `/uploads/${file.filename}`);
         }
 
-        const property = await Property.findById(req.params.id);
+        const property = await prisma.property.findUnique({ where: { id: req.params.id } });
 
         if (!property) {
             return res.status(404).json({ message: 'Property not found' });
         }
 
-        // Update fields
-        if (name !== undefined) property.name = name.trim();
-        if (location !== undefined) property.location = location.trim();
-        if (type !== undefined) property.type = type;
-        if (description !== undefined) property.description = description.trim();
-        if (status !== undefined) property.status = status;
-        if (size !== undefined) property.size = size;
-        if (dimensions !== undefined) property.dimensions = dimensions;
+        const updateData = {};
+        if (name !== undefined) updateData.name = name.trim();
+        if (location !== undefined) updateData.location = location.trim();
+        if (type !== undefined) updateData.type = type;
+        if (description !== undefined) updateData.description = description.trim();
+        if (status !== undefined) updateData.status = status;
+        if (size !== undefined) updateData.size = size;
+        if (dimensions !== undefined) updateData.dimensions = dimensions;
+        if (price !== undefined) updateData.price = parseFloat(price);
+        if (bedrooms !== undefined) updateData.bedrooms = parseInt(bedrooms);
+        if (bathrooms !== undefined) updateData.bathrooms = parseInt(bathrooms);
 
-        if (price !== undefined) property.price = Number(price);
-        if (bedrooms !== undefined) property.bedrooms = Number(bedrooms);
-        if (bathrooms !== undefined) property.bathrooms = Number(bathrooms);
-
-        // Add new images to existing ones
         if (newImages.length > 0) {
-            property.images = [...(property.images || []), ...newImages];
+            updateData.images = [...(property.images || []), ...newImages];
         }
 
-        const updatedProperty = await property.save();
-        res.json(updatedProperty);
+        const updatedProperty = await prisma.property.update({
+            where: { id: req.params.id },
+            data: updateData,
+        });
+
+        res.json({ ...updatedProperty, _id: updatedProperty.id });
     } catch (error) {
         console.error('Error updating property:', error);
-
-        // Handle validation errors
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(err => err.message).join(', ');
-            return res.status(400).json({ message: messages });
-        }
-
         res.status(500).json({
-            message: error.message || 'Error updating property',
-            ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+            message: error.message || 'Error updating property'
         });
     }
 };
@@ -221,10 +160,10 @@ const updateProperty = async (req, res) => {
 // @access  Private/Admin
 const deleteProperty = async (req, res) => {
     try {
-        const property = await Property.findById(req.params.id);
+        const property = await prisma.property.findUnique({ where: { id: req.params.id } });
 
         if (property) {
-            await property.deleteOne();
+            await prisma.property.delete({ where: { id: req.params.id } });
             res.json({ message: 'Property removed' });
         } else {
             res.status(404).json({ message: 'Property not found' });

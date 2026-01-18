@@ -1,5 +1,6 @@
-const User = require('../models/User');
+const { prisma } = require('../config/db');
 const generateToken = require('../utils/generateToken');
+const bcrypt = require('bcryptjs');
 
 // @desc    Auth user & get token
 // @route   POST /api/auth/login
@@ -7,18 +8,22 @@ const generateToken = require('../utils/generateToken');
 const authUser = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
 
-  if (user && (await user.matchPassword(password))) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(401).json({ message: 'Invalid email or password' });
+    if (user && (await bcrypt.compare(password, user.password))) {
+      res.json({
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user.id),
+      });
+    } else {
+      res.status(401).json({ message: 'Invalid email or password' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 
@@ -28,31 +33,40 @@ const authUser = async (req, res) => {
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
-  const userExists = await User.findOne({ email });
+  try {
+    const userExists = await prisma.user.findUnique({ where: { email } });
 
-  if (userExists) {
-    res.status(400).json({ message: 'User already exists' });
-    return;
-  }
+    if (userExists) {
+      res.status(400).json({ message: 'User already exists' });
+      return;
+    }
 
-  // Force role to be 'customer' for public registration
-  const user = await User.create({
-    name,
-    email,
-    password,
-    role: 'customer',
-  });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-  if (user) {
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
+    // Force role to be 'customer' for public registration
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: 'customer',
+      },
     });
-  } else {
-    res.status(400).json({ message: 'Invalid user data' });
+
+    if (user) {
+      res.status(201).json({
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user.id),
+      });
+    } else {
+      res.status(400).json({ message: 'Invalid user data' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 
@@ -62,8 +76,6 @@ const registerUser = async (req, res) => {
 const registerAdmin = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-
-    console.log('Register Admin Request:', { name, email, role, requester: req.user._id, requesterRole: req.user.role });
 
     if (!req.user) {
       return res.status(401).json({ message: 'User not authenticated' });
@@ -85,22 +97,27 @@ const registerAdmin = async (req, res) => {
       return res.status(400).json({ message: 'Invalid role' });
     }
 
-    const userExists = await User.findOne({ email });
+    const userExists = await prisma.user.findUnique({ where: { email } });
 
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role,
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+      },
     });
 
     if (user) {
       res.status(201).json({
-        _id: user._id,
+        _id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -118,41 +135,63 @@ const registerAdmin = async (req, res) => {
 // @route   GET /api/admin/users
 // @access  Private (Admin/Manager/Superadmin)
 const getUsers = async (req, res) => {
-  const users = await User.find({}).select('-password');
-  res.json(users);
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isBlocked: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+    // Map id to _id for frontend compatibility if needed, though id is usually fine
+    const mappedUsers = users.map(u => ({ ...u, _id: u.id }));
+    res.json(mappedUsers);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
 };
 
 // @desc    Update user role
 // @route   PATCH /api/admin/users/:id/role
 // @access  Private (Admin/Manager/Superadmin)
 const updateUserRole = async (req, res) => {
-  const user = await User.findById(req.params.id);
   const { role } = req.body;
   const requesterRole = req.user.role;
 
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Hierarchy checks
+    if (role === 'superadmin' && requesterRole !== 'superadmin') {
+      return res.status(403).json({ message: 'Only Super Admin can promote to Super Admin' });
+    }
+
+    if (user.role === 'superadmin' && requesterRole !== 'superadmin') {
+      return res.status(403).json({ message: 'Cannot modify Super Admin' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { role },
+    });
+
+    res.json({
+      _id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
-
-  // Hierarchy checks
-  if (role === 'superadmin' && requesterRole !== 'superadmin') {
-    return res.status(403).json({ message: 'Only Super Admin can promote to Super Admin' });
-  }
-
-  // Prevent modifying Super Admin unless you are Super Admin (optional safety)
-  if (user.role === 'superadmin' && requesterRole !== 'superadmin') {
-    return res.status(403).json({ message: 'Cannot modify Super Admin' });
-  }
-
-  user.role = role;
-  const updatedUser = await user.save();
-
-  res.json({
-    _id: updatedUser._id,
-    name: updatedUser.name,
-    email: updatedUser.email,
-    role: updatedUser.role,
-  });
 };
 
 // @desc    Delete user
@@ -160,13 +199,13 @@ const updateUserRole = async (req, res) => {
 // @access  Private (Superadmin)
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
 
     if (user) {
       if (user.role === 'superadmin') {
         return res.status(403).json({ message: 'Cannot delete Super Admin' });
       }
-      await user.deleteOne();
+      await prisma.user.delete({ where: { id: req.params.id } });
       res.json({ message: 'User removed' });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -181,15 +220,17 @@ const deleteUser = async (req, res) => {
 // @access  Private (Admin/Manager/Superadmin)
 const toggleBlockUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
 
     if (user) {
       if (user.role === 'superadmin') {
         return res.status(403).json({ message: 'Cannot block Super Admin' });
       }
-      user.isBlocked = !user.isBlocked;
-      await user.save();
-      res.json({ message: `User ${user.isBlocked ? 'blocked' : 'unblocked'}` });
+      const updatedUser = await prisma.user.update({
+        where: { id: req.params.id },
+        data: { isBlocked: !user.isBlocked },
+      });
+      res.json({ message: `User ${updatedUser.isBlocked ? 'blocked' : 'unblocked'}` });
     } else {
       res.status(404).json({ message: 'User not found' });
     }

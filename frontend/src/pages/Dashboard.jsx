@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Building2, Users, DoorOpen, Wrench, MessageSquare, Ban, Trash2, ArrowRight } from 'lucide-react';
+import { Building2, Users, DoorOpen, Wrench, MessageSquare, Ban, Trash2, ArrowRight, DollarSign, CreditCard, MapPin } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
 import axios from '../utils/axios';
@@ -16,7 +16,6 @@ const Dashboard = () => {
     totalCustomers: 0,
     totalUnits: 0,
     occupiedUnits: 0,
-    availableUnits: 0,
     availableUnits: 0,
     maintenanceRequests: 0,
     customerRequests: 0,
@@ -50,21 +49,7 @@ const Dashboard = () => {
       const { data } = await axios.get('/dashboard/stats');
       setStats(data);
     } catch (error) {
-      console.log('Using dummy data for dashboard');
-      setStats({
-        totalProperties: 12,
-        availableProperties: 5,
-        rentedProperties: 5,
-        soldProperties: 2,
-        totalTenants: 45,
-        totalCustomers: 100,
-        totalUnits: 50,
-        occupiedUnits: 45,
-        availableUnits: 5,
-        maintenanceRequests: 3,
-        customerRequests: 2,
-        landProperties: 4,
-      });
+      console.error('Failed to fetch stats', error);
     }
   };
 
@@ -120,6 +105,7 @@ const Dashboard = () => {
     </div>
   );
 
+  console.log('Dashboard Render Check:', { MapPin: typeof MapPin !== 'undefined' ? 'Defined' : 'Undefined', Building2, Users });
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
@@ -141,47 +127,70 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          value={stats.totalProperties}
-          icon={<Building2 size={24} />}
-          color="bg-blue-600"
-        />
-        <StatCard
-          title="Total Land"
-          value={stats.landProperties}
-          icon={<Building2 size={24} />}
-          color="bg-emerald-600"
-        />
-        <StatCard
-          title="Available Properties"
-          value={stats.availableProperties}
-          icon={<Building2 size={24} />}
-          color="bg-green-600"
-        />
-        <StatCard
-          title="Rented Properties"
-          value={stats.rentedProperties}
-          icon={<Building2 size={24} />}
-          color="bg-purple-600"
-        />
-        <StatCard
-          title="Sold Properties"
-          value={stats.soldProperties}
-          icon={<Building2 size={24} />}
-          color="bg-orange-600"
-        />
-        <StatCard
-          title="Total Customers"
-          value={stats.totalCustomers}
-          icon={<Users size={24} />}
-          color="bg-indigo-600"
-        />
-        <StatCard
-          title="Maintenance Pending"
-          value={stats.maintenanceRequests}
-          icon={<Wrench size={24} />}
-          color="bg-red-600"
-        />
+        <Link to="/properties" className="block">
+          <StatCard
+            title="Total Properties"
+            value={stats.totalProperties}
+            icon={<Building2 size={24} />}
+            color="bg-blue-600"
+          />
+        </Link>
+        <Link to="/land" className="block">
+          <StatCard
+            title="Total Land"
+            value={stats.landProperties}
+            icon={typeof MapPin !== 'undefined' ? <MapPin size={24} /> : <Building2 size={24} />}
+            color="bg-emerald-600"
+          />
+        </Link>
+        <Link to="/units" className="block">
+          <StatCard
+            title="Total Units"
+            value={stats.totalUnits}
+            icon={<DoorOpen size={24} />}
+            color="bg-indigo-600"
+          />
+        </Link>
+        <Link to="/tenants" className="block">
+          <StatCard
+            title="Total Tenants"
+            value={stats.totalTenants}
+            icon={<Users size={24} />}
+            color="bg-purple-600"
+          />
+        </Link>
+        <Link to="/maintenance" className="block">
+          <StatCard
+            title="Maintenance Pending"
+            value={stats.maintenanceRequests}
+            icon={<Wrench size={24} />}
+            color="bg-red-600"
+          />
+        </Link>
+        <Link to="/payments" className="block">
+          <StatCard
+            title="Total Income"
+            value={`$${stats?.totalIncome?.toLocaleString() || 0}`}
+            icon={<DollarSign size={24} />}
+            color="bg-blue-600"
+          />
+        </Link>
+        <Link to="/expenses" className="block">
+          <StatCard
+            title="Total Expenses"
+            value={`$${stats?.totalExpenses?.toLocaleString() || 0}`}
+            icon={<DollarSign size={24} />}
+            color="bg-red-600"
+          />
+        </Link>
+        <Link to="/admin/dashboard" className="block">
+          <StatCard
+            title="Monthly Profit"
+            value={`$${stats?.monthlyProfit?.toLocaleString() || 0}`}
+            icon={<CreditCard size={24} />}
+            color="bg-emerald-600"
+          />
+        </Link>
         <Link to="/requests" className="block">
           <div className="bg-white rounded-xl shadow-sm p-6 flex items-center border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
             <div className="p-4 rounded-full mr-4 bg-yellow-600 bg-opacity-10 group-hover:bg-opacity-20 transition-colors">

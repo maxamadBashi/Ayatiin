@@ -4,10 +4,19 @@ const {
     getPayments,
     createPayment,
     updatePayment,
+    generateInvoices
 } = require('../controllers/paymentController');
 const { protect, authorize } = require('../middleware/auth');
 
-router.route('/').get(protect, getPayments).post(protect, createPayment);
-router.route('/:id').put(protect, authorize('admin', 'manager'), updatePayment);
+router.use(protect);
+
+router.route('/')
+    .get(getPayments)
+    .post(createPayment);
+
+router.post('/generate-invoices', authorize('admin'), generateInvoices);
+
+router.route('/:id')
+    .put(authorize('admin', 'manager'), updatePayment);
 
 module.exports = router;

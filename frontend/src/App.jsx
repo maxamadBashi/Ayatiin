@@ -14,6 +14,9 @@ import Navbar from './components/Navbar';
 import { useAuth } from './context/AuthContext';
 import Requests from './pages/Requests';
 import Units from './pages/Units';
+import Expenses from './pages/Expenses';
+import Settings from './pages/Settings';
+import Guarantors from './pages/Guarantors';
 
 import CustomerDashboard from './pages/CustomerDashboard';
 
@@ -121,6 +124,21 @@ function App() {
           <Route path="/requests" element={
             <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
               <Requests />
+            </ProtectedRoute>
+          } />
+          <Route path="/expenses" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin', 'accountant']}>
+              <Expenses />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
+              <Settings />
+            </ProtectedRoute>
+          } />
+          <Route path="/guarantors" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+              <Guarantors />
             </ProtectedRoute>
           } />
 

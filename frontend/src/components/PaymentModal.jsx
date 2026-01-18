@@ -71,12 +71,31 @@ const PaymentModal = ({ isOpen, onClose, onSubmit, payment, leases }) => {
                         >
                             <option value="">Select Lease</option>
                             {leases.map((lease) => (
-                                <option key={lease._id} value={lease._id}>
-                                    {lease.tenant?.name} - {lease.unit?.unitNumber}
+                                <option key={lease._id || lease.id} value={lease._id || lease.id}>
+                                    {lease.tenant?.name} - {lease.unit?.unitNumber} (${lease.rentAmount})
                                 </option>
                             ))}
                         </select>
                     </div>
+
+                    {formData.lease && (
+                        <div className="mb-4 p-3 bg-blue-50 rounded-lg space-y-1">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Total Rent Due:</span>
+                                <span className="font-bold text-gray-800">${leases.find(l => (l._id || l.id) === formData.lease)?.rentAmount || 0}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Currently Entering:</span>
+                                <span className="font-bold text-blue-600">${formData.amount || 0}</span>
+                            </div>
+                            <div className="flex justify-between text-sm border-t pt-1 mt-1">
+                                <span className="text-gray-600">Remaining after this:</span>
+                                <span className="font-bold text-red-600">
+                                    ${(leases.find(l => (l._id || l.id) === formData.lease)?.rentAmount || 0) - (formData.amount || 0)}
+                                </span>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">

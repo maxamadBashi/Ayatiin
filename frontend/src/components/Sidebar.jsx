@@ -11,6 +11,8 @@ import {
     LogOut,
     MessageSquare,
     MapPin,
+    DollarSign,
+    Shield,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -29,8 +31,12 @@ const Sidebar = () => {
         // Units & Tenants ku dar sidebar-ka
         { path: '/units', icon: <DoorOpen size={20} />, label: 'Units' },
         { path: '/tenants', icon: <Users size={20} />, label: 'Tenants' },
+        { path: '/leases', icon: <FileText size={20} />, label: 'Leases' },
+        { path: '/guarantors', icon: <Shield size={20} />, label: 'Guarantors' },
+        { path: '/payments', icon: <CreditCard size={20} />, label: 'Payments' },
         { path: '/requests', icon: <MessageSquare size={20} />, label: 'Requests' },
         { path: '/maintenance', icon: <Wrench size={20} />, label: 'Maintenance' },
+        { path: '/expenses', icon: <DollarSign size={20} />, label: 'Expenses' },
     ];
 
     return (

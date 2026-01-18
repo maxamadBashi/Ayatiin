@@ -1,38 +1,38 @@
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
-const User = require('./models/User');
-const connectDB = require('./config/db');
 const bcrypt = require('bcryptjs');
+const { prisma } = require('./config/db');
 
 // Load env vars
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const resetAdmin = async () => {
     try {
-        await connectDB();
-
         const email = 'moha33@gmail.com';
         const password = '123';
 
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
         // Find user
-        let user = await User.findOne({ email });
+        let user = await prisma.user.findUnique({ where: { email } });
 
         if (user) {
             // Update password
-            // Note: User model likely has pre-save hook to hash password, 
-            // but if we use findOneAndUpdate it might bypass it depending on implementation.
-            // Safer to fetch, set, and save.
-            user.password = password;
-            await user.save();
+            await prisma.user.update({
+                where: { email },
+                data: { password: hashedPassword }
+            });
             console.log(`Admin password updated to: ${password}`);
         } else {
             // Create if not exists
-            user = await User.create({
-                name: 'Super Admin',
-                email,
-                password,
-                role: 'superadmin',
+            user = await prisma.user.create({
+                data: {
+                    name: 'Super Admin',
+                    email,
+                    password: hashedPassword,
+                    role: 'superadmin',
+                },
             });
             console.log(`Admin user created with password: ${password}`);
         }

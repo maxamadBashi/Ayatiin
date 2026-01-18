@@ -1,12 +1,18 @@
-const Request = require('../models/Request');
+const { prisma } = require('../config/db');
 
 // @desc    Get all requests
 // @route   GET /api/requests
 // @access  Private (Admin/Manager/Superadmin)
 const getRequests = async (req, res) => {
     try {
-        const requests = await Request.find({}).populate('customer', 'name email').populate('property', 'name location');
-        res.json(requests);
+        const requests = await prisma.request.findMany({
+            include: {
+                user: { select: { id: true, name: true, email: true } },
+                property: { select: { name: true, location: true } }
+            }
+        });
+        const mappedRequests = requests.map(r => ({ ...r, _id: r.id, customer: r.user }));
+        res.json(mappedRequests);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -17,8 +23,12 @@ const getRequests = async (req, res) => {
 // @access  Private (Customer)
 const getMyRequests = async (req, res) => {
     try {
-        const requests = await Request.find({ customer: req.user._id }).populate('property', 'name location');
-        res.json(requests);
+        const requests = await prisma.request.findMany({
+            where: { userId: req.user.id },
+            property: { select: { name: true, location: true } }
+        });
+        const mappedRequests = requests.map(r => ({ ...r, _id: r.id }));
+        res.json(mappedRequests);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -29,40 +39,28 @@ const getMyRequests = async (req, res) => {
 // @access  Private (Customer)
 const createRequest = async (req, res) => {
     try {
-        const { type, message, property, visitDate, amount } = req.body;
+        const { type, message, subject } = req.body;
 
-        if (!property) {
-            return res.status(400).json({ message: 'Property is required' });
+        if (!type) {
+            return res.status(400).json({ message: 'Request type is required' });
         }
 
-        if (!type || (type !== 'booking' && type !== 'purchase')) {
-            return res.status(400).json({ message: 'Request type must be booking or purchase' });
-        }
+        const request = await prisma.request.create({
+            data: {
+                userId: req.user.id,
+                type,
+                subject: subject || 'No Subject',
+                message: message || '',
+                status: 'pending',
+            },
+            include: {
+                user: { select: { id: true, name: true, email: true } }
+            }
+        });
 
-        const requestData = {
-            customer: req.user._id,
-            type,
-            property,
-        };
-
-        if (message) requestData.message = message.trim();
-        if (visitDate) requestData.visitDate = new Date(visitDate);
-        if (amount) requestData.amount = Number(amount);
-
-        const request = new Request(requestData);
-        const createdRequest = await request.save();
-        
-        // Populate property and customer for response
-        await createdRequest.populate('property', 'name location type price');
-        await createdRequest.populate('customer', 'name email');
-        
-        res.status(201).json(createdRequest);
+        res.status(201).json({ ...request, _id: request.id, customer: request.user });
     } catch (error) {
         console.error('Error creating request:', error);
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(err => err.message).join(', ');
-            return res.status(400).json({ message: messages });
-        }
         res.status(500).json({ message: error.message || 'Error creating request' });
     }
 };
@@ -78,20 +76,21 @@ const updateRequestStatus = async (req, res) => {
             return res.status(400).json({ message: 'Invalid status. Must be pending, approved, rejected, or completed' });
         }
 
-        const request = await Request.findById(req.params.id);
+        const request = await prisma.request.findUnique({ where: { id: req.params.id } });
 
         if (!request) {
             return res.status(404).json({ message: 'Request not found' });
         }
 
-        request.status = status;
-        const updatedRequest = await request.save();
-        
-        // Populate for response
-        await updatedRequest.populate('property', 'name location type price');
-        await updatedRequest.populate('customer', 'name email');
-        
-        res.json(updatedRequest);
+        const updatedRequest = await prisma.request.update({
+            where: { id: req.params.id },
+            data: { status },
+            include: {
+                user: { select: { id: true, name: true, email: true } }
+            }
+        });
+
+        res.json({ ...updatedRequest, _id: updatedRequest.id, customer: updatedRequest.user });
     } catch (error) {
         console.error('Error updating request status:', error);
         res.status(500).json({ message: error.message || 'Error updating request status' });

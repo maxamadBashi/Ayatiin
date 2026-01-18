@@ -1,4 +1,4 @@
-const Unit = require('../models/Unit');
+const { prisma } = require('../config/db');
 
 // @desc    Get all units
 // @route   GET /api/units
@@ -6,9 +6,18 @@ const Unit = require('../models/Unit');
 const getUnits = async (req, res) => {
     try {
         const { status } = req.query;
-        const query = status ? { status } : {};
-        const units = await Unit.find(query).populate('property', 'name');
-        res.json(units);
+        const where = status ? { status } : {};
+        const units = await prisma.unit.findMany({
+            where,
+            include: {
+                property: {
+                    select: { name: true }
+                }
+            }
+        });
+        // Map id to _id for frontend compatibility
+        const mappedUnits = units.map(u => ({ ...u, _id: u.id }));
+        res.json(mappedUnits);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -18,24 +27,21 @@ const getUnits = async (req, res) => {
 // @route   POST /api/units
 // @access  Private/Admin
 const createUnit = async (req, res) => {
-    const { property, unitNumber, type, rentAmount, status, bedrooms, bathrooms, size, floor, features } = req.body;
+    const { property, unitNumber, type, rentAmount, status, description } = req.body;
 
     try {
-        const unit = new Unit({
-            property,
-            unitNumber,
-            type,
-            rentAmount,
-            status,
-            bedrooms,
-            bathrooms,
-            size,
-            floor,
-            features,
+        const unit = await prisma.unit.create({
+            data: {
+                propertyId: property, // Assuming property field in request body is the ID
+                unitNumber,
+                type,
+                rentAmount: parseFloat(rentAmount),
+                status: status || 'available',
+                description,
+            },
         });
 
-        const createdUnit = await unit.save();
-        res.status(201).json(createdUnit);
+        res.status(201).json({ ...unit, _id: unit.id });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -45,25 +51,25 @@ const createUnit = async (req, res) => {
 // @route   PUT /api/units/:id
 // @access  Private/Admin
 const updateUnit = async (req, res) => {
-    const { property, unitNumber, type, rentAmount, status, bedrooms, bathrooms, size, floor, features } = req.body;
+    const { property, unitNumber, type, rentAmount, status, description } = req.body;
 
     try {
-        const unit = await Unit.findById(req.params.id);
+        const unit = await prisma.unit.findUnique({ where: { id: req.params.id } });
 
         if (unit) {
-            unit.property = property || unit.property;
-            unit.unitNumber = unitNumber || unit.unitNumber;
-            unit.type = type || unit.type;
-            unit.rentAmount = rentAmount || unit.rentAmount;
-            unit.status = status || unit.status;
-            unit.bedrooms = bedrooms || unit.bedrooms;
-            unit.bathrooms = bathrooms || unit.bathrooms;
-            unit.size = size || unit.size;
-            unit.floor = floor || unit.floor;
-            unit.features = features || unit.features;
+            const updateData = {};
+            if (property) updateData.propertyId = property;
+            if (unitNumber) updateData.unitNumber = unitNumber;
+            if (type) updateData.type = type;
+            if (rentAmount) updateData.rentAmount = parseFloat(rentAmount);
+            if (status) updateData.status = status;
+            if (description !== undefined) updateData.description = description;
 
-            const updatedUnit = await unit.save();
-            res.json(updatedUnit);
+            const updatedUnit = await prisma.unit.update({
+                where: { id: req.params.id },
+                data: updateData,
+            });
+            res.json({ ...updatedUnit, _id: updatedUnit.id });
         } else {
             res.status(404).json({ message: 'Unit not found' });
         }
@@ -77,10 +83,10 @@ const updateUnit = async (req, res) => {
 // @access  Private/Admin
 const deleteUnit = async (req, res) => {
     try {
-        const unit = await Unit.findById(req.params.id);
+        const unit = await prisma.unit.findUnique({ where: { id: req.params.id } });
 
         if (unit) {
-            await unit.deleteOne();
+            await prisma.unit.delete({ where: { id: req.params.id } });
             res.json({ message: 'Unit removed' });
         } else {
             res.status(404).json({ message: 'Unit not found' });

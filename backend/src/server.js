@@ -1,7 +1,7 @@
 const express = require('express'); // Force restart
 const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./config/db');
+const { connectDB } = require('./config/db');
 const { errorHandler } = require('./middleware/errorHandler');
 
 // Route files
@@ -13,6 +13,8 @@ const leaseRoutes = require('./routes/leaseRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const requestRoutes = require('./routes/requestRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
+const guarantorRoutes = require('./routes/guarantorRoutes');
 
 const path = require('path');
 
@@ -37,6 +39,9 @@ app.use('/api/leases', leaseRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/requests', requestRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/guarantors', guarantorRoutes);
+app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/docs', require('./routes/docs'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 

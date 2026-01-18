@@ -1,14 +1,29 @@
-const Payment = require('../models/Payment');
+const { prisma } = require('../config/db');
 
 // @desc    Get all payments
 // @route   GET /api/payments
 // @access  Private
 const getPayments = async (req, res) => {
     try {
-        const payments = await Payment.find({})
-            .populate('tenant', 'name')
-            .populate('lease');
-        res.json(payments);
+        const payments = await prisma.payment.findMany({
+            include: {
+                lease: {
+                    include: {
+                        tenant: { select: { name: true, phone: true } },
+                        unit: {
+                            select: {
+                                unitNumber: true,
+                                property: { select: { name: true, location: true } }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { paymentDate: 'desc' }
+        });
+        // Map id to _id for frontend compatibility
+        const mappedPayments = payments.map(p => ({ ...p, _id: p.id }));
+        res.json(mappedPayments);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -18,20 +33,33 @@ const getPayments = async (req, res) => {
 // @route   POST /api/payments
 // @access  Private
 const createPayment = async (req, res) => {
-    const { lease, tenant, amount, date, type, status } = req.body;
+    const { lease, amount, date, method, status, referenceId } = req.body;
 
     try {
-        const payment = new Payment({
-            lease,
-            tenant,
-            amount,
-            date,
-            type,
-            status,
+        const payment = await prisma.payment.create({
+            data: {
+                leaseId: lease,
+                amount: parseFloat(amount),
+                paymentDate: date ? new Date(date) : new Date(),
+                paymentMethod: method || 'bank_transfer',
+                status: status || 'pending',
+                referenceId,
+            },
+            include: {
+                lease: {
+                    include: {
+                        tenant: { select: { name: true, phone: true } },
+                        unit: {
+                            select: {
+                                unitNumber: true,
+                                property: { select: { name: true, location: true } }
+                            }
+                        }
+                    }
+                }
+            }
         });
-
-        const createdPayment = await payment.save();
-        res.status(201).json(createdPayment);
+        res.status(201).json({ ...payment, _id: payment.id });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -44,13 +72,14 @@ const updatePayment = async (req, res) => {
     const { status } = req.body;
 
     try {
-        const payment = await Payment.findById(req.params.id);
+        const payment = await prisma.payment.findUnique({ where: { id: req.params.id } });
 
         if (payment) {
-            payment.status = status || payment.status;
-
-            const updatedPayment = await payment.save();
-            res.json(updatedPayment);
+            const updatedPayment = await prisma.payment.update({
+                where: { id: req.params.id },
+                data: { status: status || payment.status },
+            });
+            res.json({ ...updatedPayment, _id: updatedPayment.id });
         } else {
             res.status(404).json({ message: 'Payment not found' });
         }
@@ -59,8 +88,57 @@ const updatePayment = async (req, res) => {
     }
 };
 
+const generateInvoices = async (req, res) => {
+    try {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+        // Find active leases with autoInvoice enabled
+        const activeLeases = await prisma.lease.findMany({
+            where: {
+                status: 'active',
+                autoInvoice: true,
+            }
+        });
+
+        let createdCount = 0;
+        for (const lease of activeLeases) {
+            // Check if invoice already exists for this lease this month
+            const existingPayment = await prisma.payment.findFirst({
+                where: {
+                    leaseId: lease.id,
+                    type: 'rent',
+                    paymentDate: {
+                        gte: startOfMonth,
+                        lte: endOfMonth
+                    }
+                }
+            });
+
+            if (!existingPayment) {
+                await prisma.payment.create({
+                    data: {
+                        leaseId: lease.id,
+                        amount: lease.rentAmount,
+                        paymentDate: now,
+                        paymentMethod: 'pending',
+                        status: 'pending',
+                    }
+                });
+                createdCount++;
+            }
+        }
+
+        res.json({ message: `Successfully generated ${createdCount} invoices for the current month.`, count: createdCount });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getPayments,
     createPayment,
     updatePayment,
+    generateInvoices
 };

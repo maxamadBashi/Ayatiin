@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  customer
+  admin
+  manager
+  superadmin
+  tenant
+  accountant
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(customer)
+  isBlocked Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  requests       Request[]
+  maintenance    Maintenance[]
+  tenants        Tenant[]
+  auditLogs      AuditLog[]
+}
+
+enum PropertyType {
+  Apartment
+  House
+  Villa
+  Land
+  Commercial
+  Land_for_Sale @map("Land for Sale")
+  Commercial_Land @map("Commercial Land")
+  Residential_Land @map("Residential Land")
+  Farm_Land @map("Farm Land")
+  Investment_Land @map("Investment Land")
+}
+
+enum PropertyStatus {
+  available
+  rented
+  sold
+}
+
+model Property {
+  id          String         @id @default(uuid())
+  name        String
+  location    String
+  type        PropertyType   @default(Apartment)
+  size        String?
+  dimensions  String?
+  price       Float?
+  bedrooms    Int?
+  bathrooms   Int?
+  description String?
+  status      PropertyStatus @default(available)
+  images      String[]
+  createdAt   DateTime       @default(now())
+
+  units       Unit[]
+  expenses    Expense[]
+}
+
+model Unit {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+  unitNumber  String
+  type        String
+  rentAmount  Float
+  status      String   @default("available")
+  description String?
+  createdAt   DateTime @default(now())
+
+  leases      Lease[]
+}
+
+model Tenant {
+  id            String   @id @default(uuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  name          String
+  email         String   @unique
+  phone         String
+  idNumber      String?
+  emergencyContact String?
+  createdAt     DateTime @default(now())
+
+  leases        Lease[]
+}
+
+model Lease {
+  id          String   @id @default(uuid())
+  unitId      String
+  unit        Unit     @relation(fields: [unitId], references: [id])
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
+  rentAmount  Float
+  deposit     Float    @default(0)
+  rentCycle   String   @default("monthly") // monthly, quarterly, yearly
+  autoInvoice Boolean  @default(true)
+  status      String   @default("active")
+  
+  // Guarantor Info
+  guarantor         Guarantor? @relation(fields: [guarantorId], references: [id])
+  guarantorId       String?    @db.Uuid
+  guarantorName     String?
+  guarantorPhone    String?
+  guarantorID       String?
+  conditions        String? @db.Text
+
+  // Vehicle Info
+  vehicleMake    String?
+  vehicleModel   String?
+  vehiclePlate   String?
+
+  // Legal Weapons
+  weaponType     String?
+  weaponLicense  String?
+
+  // Witnesses
+  witness1Name   String?
+  witness1Phone  String?
+  witness1ID     String?
+  witness2Name   String?
+  witness2Phone  String?
+  witness2ID     String?
+  witness3Name   String?
+  witness3Phone  String?
+  witness3ID     String?
+
+  createdAt   DateTime @default(now())
+
+  payments    Payment[]
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  leaseId       String
+  lease         Lease    @relation(fields: [leaseId], references: [id])
+  amount        Float
+  paymentDate   DateTime @default(now())
+  paymentMethod String
+  status        String   @default("pending")
+  referenceId   String?
+  createdAt     DateTime @default(now())
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  category    String
+  amount      Float
+  description String?
+  date        DateTime @default(now())
+  propertyId  String?
+  property    Property? @relation(fields: [propertyId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Setting {
+  id             String   @id @default(uuid())
+  companyName    String   @default("Ayatiin Property Management")
+  companyLogo    String?
+  currency       String   @default("USD")
+  paymentMethods String? // JSON string
+  updatedAt      DateTime @updatedAt
+}
+
+model Maintenance {
+  id           String   @id @default(uuid())
+  propertyId   String?
+  unitId       String?
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  issue        String
+  description  String
+  priority     String   @default("medium")
+  status       String   @default("pending")
+  cost         Float?
+  createdAt    DateTime @default(now())
+}
+
+model Request {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String
+  subject     String
+  message     String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
+
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model Guarantor {
+  id            String   @id @default(uuid())
+  name          String
+  phone         String
+  email         String?
+  idNumber      String?
+  idPhoto       String?
+  workInfo      String?
+  workIdPhoto   String?
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  leases        Lease[]
+}

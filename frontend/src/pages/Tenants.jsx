@@ -24,17 +24,7 @@ const Tenants = () => {
             setTenants(tenantsRes.data);
             setUnits(unitsRes.data);
         } catch (error) {
-            console.log('Using dummy tenants');
-            setTenants([
-                { _id: '1', name: 'John Doe', email: 'john@example.com', phone: '555-0123', status: 'active', unit: { _id: 'u1', unitNumber: '101' } },
-                { _id: '2', name: 'Jane Smith', email: 'jane@example.com', phone: '555-0456', status: 'active', unit: { _id: 'u2', unitNumber: 'B-05' } },
-                { _id: '3', name: 'Mike Johnson', email: 'mike@example.com', phone: '555-0789', status: 'inactive', unit: null },
-            ]);
-            setUnits([
-                { _id: 'u1', unitNumber: '101', status: 'occupied' },
-                { _id: 'u2', unitNumber: 'B-05', status: 'occupied' },
-                { _id: 'u3', unitNumber: '102', status: 'available' }
-            ]);
+            console.error('Error fetching tenants', error);
         } finally {
             setLoading(false);
         }
@@ -64,24 +54,17 @@ const Tenants = () => {
     const handleSubmit = async (formData) => {
         try {
             if (currentTenant) {
-                const { data } = await axios.put(`/tenants/${currentTenant._id}`, formData);
-                const updatedTenant = { ...data, unit: units.find(u => u._id === formData.unit) };
-                setTenants(tenants.map(t => t._id === currentTenant._id ? updatedTenant : t));
+                await axios.put(`/tenants/${currentTenant._id}`, formData);
+                fetchData();
             } else {
-                const { data } = await axios.post('/tenants', formData);
-                const newTenant = { ...data, unit: units.find(u => u._id === formData.unit) };
-                setTenants([...tenants, newTenant]);
+                await axios.post('/tenants', formData);
+                fetchData();
             }
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error saving tenant', error);
-            // Dummy fallback
-            if (currentTenant) {
-                setTenants(tenants.map(t => t._id === currentTenant._id ? { ...t, ...formData, unit: units.find(u => u._id === formData.unit) } : t));
-            } else {
-                setTenants([...tenants, { _id: Date.now().toString(), ...formData, unit: units.find(u => u._id === formData.unit) }]);
-            }
-            setIsModalOpen(false);
+            const message = error.response?.data?.message || error.message || 'Error saving tenant';
+            alert(message);
         }
     };
 

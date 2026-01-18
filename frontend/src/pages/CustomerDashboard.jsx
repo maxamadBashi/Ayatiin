@@ -13,9 +13,8 @@ const CustomerDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
     const [maintenanceFormData, setMaintenanceFormData] = useState({
-        description: '',
-        priority: 'medium',
-        property: '', // Ideally we should let them select from their rented properties
+        property: '',
+        unit: '',
     });
 
     useEffect(() => {
@@ -314,60 +313,70 @@ const CustomerDashboard = () => {
             </main >
 
             {/* Maintenance Modal */}
-            {
-                isMaintenanceModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-900">Report Maintenance Issue</h3>
-                                <button onClick={() => setIsMaintenanceModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                                    <XCircle size={24} />
-                                </button>
-                            </div>
-                            <form onSubmit={async (e) => {
-                                e.preventDefault();
-                                try {
-                                    // In a real app, we need to know WHICH property/unit the tenant is in.
-                                    // For now, we'll try to submit. The backend expects 'property' ID.
-                                    // Since we don't have a robust "My Rented Properties" selector yet,
-                                    // we might fail validation if we don't send property ID.
-                                    // Temporary Fix: Just send description and let backend/frontend handle it later or mock it.
-
-                                    // Actually, we need to let them select a property or fetch their active lease property.
-                                    // For this demo, let's assume we just send the description and the backend *should* ideally resolve property from tenant.
-                                    // BUT our current createMaintenanceRequest requires property in body.
-
-                                    alert("This feature requires selecting your rented property. Please ensure you have an active lease.");
-                                    setIsMaintenanceModalOpen(false);
-                                } catch (err) {
-                                    alert("Failed to submit");
-                                }
-                            }}>
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Issue Description</label>
-                                    <textarea
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                        rows="4"
-                                        placeholder="e.g., Leaking faucet, No electricity..."
-                                        required
-                                    ></textarea>
-                                </div>
-                                <div className="mb-6">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                                    <select className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
-                                    </select>
-                                </div>
-                                <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">
-                                    Submit Report
-                                </button>
-                            </form>
+            {isMaintenanceModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-gray-900">Report Maintenance Issue</h3>
+                            <button onClick={() => setIsMaintenanceModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <XCircle size={24} />
+                            </button>
                         </div>
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            try {
+                                const activeLease = tenantProfile?.leases?.find(l => l.status === 'active');
+                                if (!activeLease) {
+                                    alert("You need an active lease to report maintenance issues.");
+                                    return;
+                                }
+
+                                await axios.post('/maintenance', {
+                                    description: e.target.description.value,
+                                    priority: e.target.priority.value,
+                                    property: activeLease.unit.property.id || activeLease.unit.property._id,
+                                    unit: activeLease.unit.id || activeLease.unit._id
+                                });
+
+                                alert("✅ Maintenance request submitted successfully!");
+                                setIsMaintenanceModalOpen(false);
+                                // Refresh data
+                                const res = await axios.get('/maintenance/my');
+                                setMaintenanceRequests(res.data);
+                            } catch (err) {
+                                alert("Failed to submit: " + (err.response?.data?.message || err.message));
+                            }
+                        }}>
+                            <div className="mb-4">
+                                <p className="text-sm font-medium text-gray-600 mb-2">
+                                    Reporting for: <span className="text-blue-600 font-bold">
+                                        {tenantProfile?.leases?.find(l => l.status === 'active')?.unit?.property?.name || 'Your Unit'}
+                                    </span>
+                                </p>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Issue Description</label>
+                                <textarea
+                                    name="description"
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    rows="4"
+                                    placeholder="e.g., Leaking faucet, No electricity..."
+                                    required
+                                ></textarea>
+                            </div>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                <select name="priority" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95">
+                                Submit Report
+                            </button>
+                        </form>
                     </div>
-                )
-            }
+                </div>
+            )}
         </div >
     );
 };

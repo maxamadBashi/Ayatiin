@@ -1,12 +1,24 @@
-const Tenant = require('../models/Tenant');
+const { prisma } = require('../config/db');
 
 // @desc    Get all tenants
 // @route   GET /api/tenants
 // @access  Private
 const getTenants = async (req, res) => {
   try {
-    const tenants = await Tenant.find({}).populate('unit', 'unitNumber');
-    res.json(tenants);
+    const tenants = await prisma.tenant.findMany({
+      include: {
+        leases: {
+          include: {
+            unit: {
+              select: { unitNumber: true }
+            }
+          }
+        }
+      }
+    });
+    // Map id to _id for frontend compatibility
+    const mappedTenants = tenants.map(t => ({ ...t, _id: t.id }));
+    res.json(mappedTenants);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -16,31 +28,32 @@ const getTenants = async (req, res) => {
 // @route   POST /api/tenants
 // @access  Private
 const createTenant = async (req, res) => {
-  const { name, email, phone, unit, status, leaseStartDate, leaseEndDate, deposit, emergencyContact } = req.body;
+  const { name, email, phone, unit, status, emergencyContact } = req.body;
 
   try {
-    const tenant = new Tenant({
-      name,
-      email,
-      phone,
-      unit,
-      status,
-      leaseStartDate,
-      leaseEndDate,
-      deposit,
-      emergencyContact,
+    const tenant = await prisma.tenant.create({
+      data: {
+        name,
+        email,
+        phone,
+        emergencyContact,
+      },
     });
 
-    const createdTenant = await tenant.save();
-
-    // Update unit status to occupied
+    // Note: Unit attachment usually happens via Lease in this schema, 
+    // but the original controller logic updated Unit directly.
     if (unit) {
-      const Unit = require('../models/Unit');
-      await Unit.findByIdAndUpdate(unit, { status: 'occupied' });
+      await prisma.unit.update({
+        where: { id: unit },
+        data: { status: 'occupied' }
+      });
     }
 
-    res.status(201).json(createdTenant);
+    res.status(201).json({ ...tenant, _id: tenant.id });
   } catch (error) {
+    if (error.code === 'P2002' || error.message?.includes('unique constraint')) {
+      return res.status(400).json({ message: 'A tenant with this email already exists.' });
+    }
     res.status(400).json({ message: error.message });
   }
 };
@@ -49,44 +62,59 @@ const createTenant = async (req, res) => {
 // @route   PUT /api/tenants/:id
 // @access  Private
 const updateTenant = async (req, res) => {
-  const { name, email, phone, unit, status, leaseStartDate, leaseEndDate, deposit, emergencyContact } = req.body;
+  const { name, email, phone, unit, status, emergencyContact } = req.body;
 
   try {
-    const tenant = await Tenant.findById(req.params.id);
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: req.params.id },
+      include: {
+        leases: {
+          where: { status: 'active' },
+          take: 1
+        }
+      }
+    });
 
     if (tenant) {
-      const oldUnitId = tenant.unit;
+      const oldUnitId = tenant.leases.length > 0 ? tenant.leases[0].unitId : null;
 
-      tenant.name = name || tenant.name;
-      tenant.email = email || tenant.email;
-      tenant.phone = phone || tenant.phone;
-      tenant.unit = unit || tenant.unit;
-      tenant.status = status || tenant.status;
-      tenant.leaseStartDate = leaseStartDate || tenant.leaseStartDate;
-      tenant.leaseEndDate = leaseEndDate || tenant.leaseEndDate;
-      tenant.deposit = deposit || tenant.deposit;
-      tenant.emergencyContact = emergencyContact || tenant.emergencyContact;
-
-      const updatedTenant = await tenant.save();
+      const updatedTenant = await prisma.tenant.update({
+        where: { id: req.params.id },
+        data: {
+          name: name || tenant.name,
+          email: email || tenant.email,
+          phone: phone || tenant.phone,
+          emergencyContact: emergencyContact || tenant.emergencyContact,
+        }
+      });
 
       // Handle unit status change
-      if (unit && oldUnitId && unit.toString() !== oldUnitId.toString()) {
-        const Unit = require('../models/Unit');
+      if (unit && oldUnitId && unit !== oldUnitId) {
         // Set old unit to available
-        await Unit.findByIdAndUpdate(oldUnitId, { status: 'available' });
+        await prisma.unit.update({
+          where: { id: oldUnitId },
+          data: { status: 'available' }
+        });
         // Set new unit to occupied
-        await Unit.findByIdAndUpdate(unit, { status: 'occupied' });
+        await prisma.unit.update({
+          where: { id: unit },
+          data: { status: 'occupied' }
+        });
       } else if (unit && !oldUnitId) {
-        // If assigning a unit where there was none
-        const Unit = require('../models/Unit');
-        await Unit.findByIdAndUpdate(unit, { status: 'occupied' });
+        await prisma.unit.update({
+          where: { id: unit },
+          data: { status: 'occupied' }
+        });
       }
 
-      res.json(updatedTenant);
+      res.json({ ...updatedTenant, _id: updatedTenant.id });
     } else {
       res.status(404).json({ message: 'Tenant not found' });
     }
   } catch (error) {
+    if (error.code === 'P2002' || error.message?.includes('unique constraint')) {
+      return res.status(400).json({ message: 'Another tenant with this email already exists.' });
+    }
     res.status(400).json({ message: error.message });
   }
 };
@@ -96,16 +124,26 @@ const updateTenant = async (req, res) => {
 // @access  Private
 const deleteTenant = async (req, res) => {
   try {
-    const tenant = await Tenant.findById(req.params.id);
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: req.params.id },
+      include: {
+        leases: {
+          where: { status: 'active' },
+          take: 1
+        }
+      }
+    });
 
     if (tenant) {
-      const unitId = tenant.unit;
-      await tenant.deleteOne();
+      const unitId = tenant.leases.length > 0 ? tenant.leases[0].unitId : null;
+      await prisma.tenant.delete({ where: { id: req.params.id } });
 
       // Set unit to available
       if (unitId) {
-        const Unit = require('../models/Unit');
-        await Unit.findByIdAndUpdate(unitId, { status: 'available' });
+        await prisma.unit.update({
+          where: { id: unitId },
+          data: { status: 'available' }
+        });
       }
 
       res.json({ message: 'Tenant removed' });
@@ -122,18 +160,25 @@ const deleteTenant = async (req, res) => {
 // @access  Private (Customer)
 const getMyTenantProfile = async (req, res) => {
   try {
-    const tenant = await Tenant.findOne({ email: req.user.email })
-      .populate({
-        path: 'unit',
-        select: 'unitNumber property',
-        populate: {
-          path: 'property',
-          select: 'name'
+    const tenant = await prisma.tenant.findUnique({
+      where: { email: req.user.email },
+      include: {
+        leases: {
+          include: {
+            unit: {
+              include: {
+                property: {
+                  select: { name: true }
+                }
+              }
+            }
+          }
         }
-      });
+      }
+    });
 
     if (tenant) {
-      res.json(tenant);
+      res.json({ ...tenant, _id: tenant.id });
     } else {
       res.status(404).json({ message: 'Tenant profile not found' });
     }
