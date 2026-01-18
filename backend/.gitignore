@@ -1,2 +1,9 @@
-node_modules   
-/src/generated/prisma
+# Dependencies
+node_modules
+
+# Environment
+.env
+.env.production
+
+# Build
+dist
