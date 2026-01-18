@@ -1,19 +1,1 @@
-# Dependencies
 node_modules
-dist
-dist-ssr
-*.local
-
-# Environment
-.env
-.env.*
-!.env.example
-
-# Editor
-.vscode
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?

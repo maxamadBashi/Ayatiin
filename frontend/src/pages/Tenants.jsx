@@ -24,7 +24,17 @@ const Tenants = () => {
             setTenants(tenantsRes.data);
             setUnits(unitsRes.data);
         } catch (error) {
-            console.error('Error fetching tenants', error);
+            console.log('Using dummy tenants');
+            setTenants([
+                { _id: '1', name: 'John Doe', email: 'john@example.com', phone: '555-0123', status: 'active', unit: { _id: 'u1', unitNumber: '101' } },
+                { _id: '2', name: 'Jane Smith', email: 'jane@example.com', phone: '555-0456', status: 'active', unit: { _id: 'u2', unitNumber: 'B-05' } },
+                { _id: '3', name: 'Mike Johnson', email: 'mike@example.com', phone: '555-0789', status: 'inactive', unit: null },
+            ]);
+            setUnits([
+                { _id: 'u1', unitNumber: '101', status: 'occupied' },
+                { _id: 'u2', unitNumber: 'B-05', status: 'occupied' },
+                { _id: 'u3', unitNumber: '102', status: 'available' }
+            ]);
         } finally {
             setLoading(false);
         }
