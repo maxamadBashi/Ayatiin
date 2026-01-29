@@ -53,7 +53,7 @@ const Home = () => {
                 property: selectedProperty._id,
                 type: requestType
             });
-            alert('✅ Request submitted successfully!');
+            alert('✅ Request  submitted successfully!');
             setIsRequestModalOpen(false);
         } catch (error) {
             console.error('Error submitting request:', error);
