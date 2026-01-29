@@ -1,7 +1,10 @@
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { MapPin, Bed, Bath, Square, Home, Sparkles, ArrowRight } from 'lucide-react';
 
 const PublicPropertyCard = ({ property, onBook, onBuy }) => {
+    const { t } = useLanguage();
+
     const statusColors = {
         available: 'bg-green-500 text-white',
         rented: 'bg-blue-500 text-white',
@@ -45,21 +48,21 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                         <MapPin size={14} className="text-blue-600" />
-                        <span className="line-clamp-1">{property.location || 'Location not specified'}</span>
+                        <span className="line-clamp-1">{property.location || t('locationNotFixed')}</span>
                     </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">{property.description || 'Beautiful property in a prime location'}</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">{property.description || t('bestProperty')}</p>
                 </div>
 
                 {/* Price Section - Always Visible */}
                 <div className="mb-5 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
                     <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                            {property.price ? `$${property.price.toLocaleString()}` : 'Price on Request'}
+                            {property.price ? `$${property.price.toLocaleString()}` : t('onContact')}
                         </span>
                         {(property.type === 'Apartment' || property.type === 'House' || property.type === 'Villa') && property.price ? (
-                            <span className="text-sm text-gray-600">/month</span>
+                            <span className="text-sm text-gray-600">/{t('month')}</span>
                         ) : property.price ? (
-                            <span className="text-sm text-gray-600">total</span>
+                            <span className="text-sm text-gray-600">{t('total')}</span>
                         ) : null}
                     </div>
                 </div>
@@ -82,12 +85,12 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
                             <div className="flex items-center gap-2">
                                 <Bed size={18} className="text-blue-600" />
                                 <span className="font-semibold">{property.bedrooms || 0}</span>
-                                <span className="text-gray-500">Beds</span>
+                                <span className="text-gray-500">{t('beds')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Bath size={18} className="text-blue-600" />
                                 <span className="font-semibold">{property.bathrooms || 0}</span>
-                                <span className="text-gray-500">Baths</span>
+                                <span className="text-gray-500">{t('baths')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Square size={18} className="text-blue-600" />
@@ -105,13 +108,13 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
                         className="group/btn flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-semibold text-sm shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
                     >
                         <Sparkles size={16} />
-                        <span>Book Now</span>
+                        <span>{t('bookNow')}</span>
                     </button>
                     <button
                         onClick={() => onBuy(property)}
                         className="flex-1 border-2 border-blue-600 text-blue-600 py-3 rounded-xl hover:bg-blue-50 transition-all duration-300 font-semibold text-sm hover:border-blue-700 hover:text-blue-700 transform hover:scale-105 flex items-center justify-center gap-2"
                     >
-                        <span>Buy Now</span>
+                        <span>{t('buyNow')}</span>
                         <ArrowRight size={16} />
                     </button>
                 </div>

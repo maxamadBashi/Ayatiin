@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -20,6 +21,9 @@ import Guarantors from './pages/Guarantors';
 import CustomerDashboard from './pages/CustomerDashboard';
 
 import Home from './pages/Home';
+import AboutUs from './pages/AboutUs';
+import Listings from './pages/Listings';
+import ContactUs from './pages/ContactUs';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -66,86 +70,91 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+      <LanguageProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/listings" element={<Listings />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Admin Routes */}
-          <Route path="/admin/dashboard" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/properties" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Properties />
-            </ProtectedRoute>
-          } />
+            <Route path="/properties" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Properties />
+              </ProtectedRoute>
+            } />
 
 
 
-          <Route path="/tenants" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Tenants />
-            </ProtectedRoute>
-          } />
+            <Route path="/tenants" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Tenants />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/units" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Units />
-            </ProtectedRoute>
-          } />
+            <Route path="/units" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Units />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/leases" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Leases />
-            </ProtectedRoute>
-          } />
+            <Route path="/leases" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Leases />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/payments" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Payments />
-            </ProtectedRoute>
-          } />
+            <Route path="/payments" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Payments />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/maintenance" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Maintenance />
-            </ProtectedRoute>
-          } />
-          <Route path="/requests" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Requests />
-            </ProtectedRoute>
-          } />
-          <Route path="/expenses" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin', 'accountant']}>
-              <Expenses />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
-              <Settings />
-            </ProtectedRoute>
-          } />
-          <Route path="/guarantors" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
-              <Guarantors />
-            </ProtectedRoute>
-          } />
+            <Route path="/maintenance" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Maintenance />
+              </ProtectedRoute>
+            } />
+            <Route path="/requests" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Requests />
+              </ProtectedRoute>
+            } />
+            <Route path="/expenses" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin', 'accountant']}>
+                <Expenses />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
+                <Settings />
+              </ProtectedRoute>
+            } />
+            <Route path="/guarantors" element={
+              <ProtectedRoute allowedRoles={['admin', 'manager', 'superadmin']}>
+                <Guarantors />
+              </ProtectedRoute>
+            } />
 
-          {/* Customer Routes */}
-          <Route path="/customer/dashboard" element={
-            <ProtectedRoute allowedRoles={['customer', 'tenant']}>
-              <CustomerDashboard />
-            </ProtectedRoute>
-          } />
+            {/* Customer Routes */}
+            <Route path="/customer/dashboard" element={
+              <ProtectedRoute allowedRoles={['customer', 'tenant']}>
+                <CustomerDashboard />
+              </ProtectedRoute>
+            } />
 
-        </Routes>
-      </AuthProvider>
+          </Routes>
+        </AuthProvider>
+      </LanguageProvider>
     </Router>
   );
 }
