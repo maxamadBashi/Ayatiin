@@ -17,12 +17,24 @@ const logFile = path.resolve(__dirname, '../../emulator.log');
 const execute = async (query, params) => {
     const client = await pool.connect();
     try {
-        const logMsg = `[${new Date().toISOString()}] QUERY: ${query} | PARAMS: ${JSON.stringify(params)}\n`;
-        fs.appendFileSync(logFile, logMsg);
+        if (process.env.NODE_ENV !== 'production') {
+            const logMsg = `[${new Date().toISOString()}] QUERY: ${query} | PARAMS: ${JSON.stringify(params)}\n`;
+            try {
+                fs.appendFileSync(logFile, logMsg);
+            } catch (e) {
+                console.warn('Could not write to emulator.log:', e.message);
+            }
+        }
         const res = await client.query(query, params);
         return res;
     } catch (err) {
-        fs.appendFileSync(logFile, `[ERROR] ${err.message}\n`);
+        if (process.env.NODE_ENV !== 'production') {
+            try {
+                fs.appendFileSync(logFile, `[ERROR] ${err.message}\n`);
+            } catch (e) {
+                console.error('Error writing to emulator.log:', e.message);
+            }
+        }
         throw err;
     } finally {
         client.release();

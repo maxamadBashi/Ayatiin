@@ -47,23 +47,31 @@ const LeaseDetailsModal = ({ isOpen, onClose, lease, allTenants = [], allUnits =
         const val = lease[field1] || lease[field2];
         if (val && typeof val === 'object') return val;
         if (val && typeof val === 'string') {
-            return list.find(item => item[idField1] === val || item[idField2] === val) || {};
+            return list.find(item => item[idField1] === val || item[idField2] === val) || null;
         }
         const idVal = lease[field1 + 'Id'] || lease[field1 + 'ID'] || lease[field2 + 'Id'] || lease[field2 + 'ID'];
         if (idVal) {
-            return list.find(item => item[idField1] === idVal || item[idField2] === idVal) || {};
+            return list.find(item => item[idField1] === idVal || item[idField2] === idVal) || null;
         }
-        return {};
+        return null;
     };
 
-    const tenant = getRelation('tenant', 'Tenant', allTenants);
-    const unit = getRelation('unit', 'Unit', allUnits);
-    const propertyId = unit.propertyId || unit.PropertyId || (typeof unit.property === 'string' ? unit.property : null);
-    const property = getRelation('property', 'Property', allProperties) ||
-        (unit.property && typeof unit.property === 'object' ? unit.property :
-            (propertyId ? allProperties.find(p => p.id === propertyId || p._id === propertyId) : {})) || {};
+    const tenant = getRelation('tenant', 'Tenant', allTenants) || {};
+    const unit = getRelation('unit', 'Unit', allUnits) || {};
 
-    const guarantor = getRelation('guarantor', 'Guarantor', allGuarantors);
+    // Robust Property Lookup
+    let property = null;
+    if (unit.property && typeof unit.property === 'object') {
+        property = unit.property;
+    } else {
+        const pId = unit.propertyId || unit.PropertyId || (typeof unit.property === 'string' ? unit.property : null);
+        if (pId) {
+            property = allProperties.find(p => p.id === pId || p._id === pId);
+        }
+    }
+    if (!property) property = {};
+
+    const guarantor = getRelation('guarantor', 'Guarantor', allGuarantors) || {};
 
     const gName = guarantor.name || lease.guarantorName || 'N/A';
     const gPhone = guarantor.phone || lease.guarantorPhone || 'N/A';
