@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../utils/axios';
-import { Plus, Edit, Trash2, Shield, Phone, Mail, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Shield, Phone, Mail, User, Eye } from 'lucide-react';
 import GuarantorModal from '../components/GuarantorModal';
+import GuarantorDetailsModal from '../components/GuarantDetailsModal';
 
 const Guarantors = () => {
     const [guarantors, setGuarantors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentGuarantor, setCurrentGuarantor] = useState(null);
+    const [selectedGuarantor, setSelectedGuarantor] = useState(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
     useEffect(() => {
         fetchGuarantors();
@@ -32,6 +35,11 @@ const Guarantors = () => {
     const handleEdit = (guarantor) => {
         setCurrentGuarantor(guarantor);
         setIsModalOpen(true);
+    };
+
+    const handleView = (guarantor) => {
+        setSelectedGuarantor(guarantor);
+        setIsDetailsOpen(true);
     };
 
     const handleDelete = async (id) => {
@@ -94,9 +102,10 @@ const Guarantors = () => {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => handleEdit(guarantor)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Edit size={16} /></button>
-                                <button onClick={() => handleDelete(guarantor._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleView(guarantor)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="View Details"><Eye size={18} /></button>
+                                <button onClick={() => handleEdit(guarantor)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit"><Edit size={16} /></button>
+                                <button onClick={() => handleDelete(guarantor._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete"><Trash2 size={16} /></button>
                             </div>
                         </div>
 
@@ -137,6 +146,12 @@ const Guarantors = () => {
                     <p className="text-gray-500">No guarantors found. Start by adding one!</p>
                 </div>
             )}
+
+            <GuarantorDetailsModal
+                isOpen={isDetailsOpen}
+                onClose={() => setIsDetailsOpen(false)}
+                guarantor={selectedGuarantor}
+            />
 
             <GuarantorModal
                 isOpen={isModalOpen}

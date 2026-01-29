@@ -45,6 +45,9 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
         witness3ID: '',
     });
 
+    const [error, setError] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+
     useEffect(() => {
         if (lease) {
             setFormData({
@@ -81,7 +84,8 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
         } else {
             resetForm();
         }
-    }, [lease, isOpen]);
+        setError(null);
+    }, [lease, isOpen, units]);
 
     const resetForm = () => {
         setFormData({
@@ -125,9 +129,36 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSubmit(formData);
+        setError(null);
+
+        // Validation
+        if (!formData.tenant) return setError("Tenant is required");
+        if (!formData.property) return setError("Property is required");
+        if (!formData.unit) return setError("Unit is required");
+        if (!formData.startDate) return setError("Start Date is required");
+        if (!formData.endDate) return setError("End Date is required");
+        if (!formData.rentAmount) return setError("Rent Amount is required");
+
+        // Guarantor Validation (Must have ID or Manual Name)
+        if (!formData.guarantorId && !formData.guarantorName) {
+            setActiveTab('guarantor');
+            return setError("Guarantor information is required (Select or fill manually)");
+        }
+
+        if (!formData.witness1Name || !formData.witness1Phone || !formData.witness1ID) {
+            setActiveTab('witnesses');
+            return setError("Witness 1 details are required");
+        }
+
+        setSubmitting(true);
+        const result = await onSubmit(formData);
+        setSubmitting(false);
+
+        if (result && !result.success) {
+            setError(result.message);
+        }
     };
 
     const handleInlineTenantCreate = async (tenantData) => {
@@ -219,6 +250,18 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                         </button>
                     ))}
                 </div>
+
+                {error && (
+                    <div className="mx-8 mt-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold">Error:</span>
+                            <span>{error}</span>
+                        </div>
+                        <button onClick={() => setError(null)} className="p-1 hover:bg-red-100 rounded-full">
+                            <X size={16} />
+                        </button>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8">
                     {activeTab === 'basic' && (
@@ -476,9 +519,10 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                         <button
                             type="button"
                             onClick={handleSubmit}
-                            className="px-10 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                            disabled={submitting}
+                            className={`px-10 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            {lease ? 'Save Changes' : 'Create Contract'}
+                            {submitting ? 'Saving...' : (lease ? 'Save Changes' : 'Create Contract')}
                         </button>
                     </div>
                 </div>

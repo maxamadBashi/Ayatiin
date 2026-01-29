@@ -7,10 +7,10 @@ const getLeases = async (req, res) => {
   try {
     const leases = await prisma.lease.findMany({
       include: {
-        tenant: { select: { name: true } },
+        tenant: true,
         unit: {
           include: {
-            property: { select: { name: true } }
+            property: true
           }
         },
         guarantor: true
@@ -77,8 +77,22 @@ const createLease = async (req, res) => {
       },
     });
 
-    res.status(201).json({ ...lease, _id: lease.id });
+    const fullLease = await prisma.lease.findUnique({
+      where: { id: lease.id },
+      include: {
+        tenant: true,
+        unit: {
+          include: {
+            property: true
+          }
+        },
+        guarantor: true
+      }
+    });
+
+    res.status(201).json({ ...fullLease, _id: fullLease.id });
   } catch (error) {
+    console.error('Create Lease Error:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -140,11 +154,26 @@ const updateLease = async (req, res) => {
         where: { id: req.params.id },
         data: updateData,
       });
-      res.json({ ...updatedLease, _id: updatedLease.id });
+
+      const fullLease = await prisma.lease.findUnique({
+        where: { id: updatedLease.id },
+        include: {
+          tenant: true,
+          unit: {
+            include: {
+              property: true
+            }
+          },
+          guarantor: true
+        }
+      });
+
+      res.json({ ...fullLease, _id: fullLease.id });
     } else {
       res.status(404).json({ message: 'Lease not found' });
     }
   } catch (error) {
+    console.error('Update Lease Error:', error);
     res.status(400).json({ message: error.message });
   }
 };

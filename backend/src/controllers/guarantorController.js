@@ -6,7 +6,14 @@ const { prisma } = require('../config/db');
 const getGuarantors = async (req, res) => {
     try {
         const guarantors = await prisma.guarantor.findMany({
-            include: { leases: { select: { id: true } } }
+            include: {
+                leases: {
+                    include: {
+                        unit: { include: { property: true } },
+                        tenant: true
+                    }
+                }
+            }
         });
         res.json(guarantors.map(g => ({ ...g, _id: g.id })));
     } catch (error) {
@@ -21,7 +28,14 @@ const getGuarantor = async (req, res) => {
     try {
         const guarantor = await prisma.guarantor.findUnique({
             where: { id: req.params.id },
-            include: { leases: true }
+            include: {
+                leases: {
+                    include: {
+                        unit: { include: { property: true } },
+                        tenant: true
+                    }
+                }
+            }
         });
         if (guarantor) {
             res.json({ ...guarantor, _id: guarantor.id });
@@ -43,8 +57,8 @@ const createGuarantor = async (req, res) => {
             data: {
                 ...data,
                 // Handle potential file paths from multer fields
-                idPhoto: req.files && req.files.idPhoto ? req.files.idPhoto[0].path : data.idPhoto,
-                workIdPhoto: req.files && req.files.workIdPhoto ? req.files.workIdPhoto[0].path : data.workIdPhoto,
+                idPhoto: req.files && req.files.idPhoto ? `/uploads/${req.files.idPhoto[0].filename}` : data.idPhoto,
+                workIdPhoto: req.files && req.files.workIdPhoto ? `/uploads/${req.files.workIdPhoto[0].filename}` : data.workIdPhoto,
             }
         });
         res.status(201).json({ ...guarantor, _id: guarantor.id });
@@ -63,8 +77,8 @@ const updateGuarantor = async (req, res) => {
             where: { id: req.params.id },
             data: {
                 ...data,
-                idPhoto: req.files && req.files.idPhoto ? req.files.idPhoto[0].path : data.idPhoto,
-                workIdPhoto: req.files && req.files.workIdPhoto ? req.files.workIdPhoto[0].path : data.workIdPhoto,
+                idPhoto: req.files && req.files.idPhoto ? `/uploads/${req.files.idPhoto[0].filename}` : data.idPhoto,
+                workIdPhoto: req.files && req.files.workIdPhoto ? `/uploads/${req.files.workIdPhoto[0].filename}` : data.workIdPhoto,
             }
         });
         res.json({ ...guarantor, _id: guarantor.id });

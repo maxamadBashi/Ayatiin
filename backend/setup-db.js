@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS "Lease" (
     auto_invoice BOOLEAN NOT NULL DEFAULT true,
     guarantor_name TEXT,
     guarantor_phone TEXT,
-    guarantor_id TEXT,
+    guarantor_i_d TEXT,
     conditions TEXT,
     vehicle_make TEXT,
     vehicle_model TEXT,
@@ -104,13 +104,13 @@ CREATE TABLE IF NOT EXISTS "Lease" (
     weapon_license TEXT,
     witness1_name TEXT,
     witness1_phone TEXT,
-    witness1_id TEXT,
+    witness1_i_d TEXT,
     witness2_name TEXT,
     witness2_phone TEXT,
-    witness2_id TEXT,
+    witness2_i_d TEXT,
     witness3_name TEXT,
     witness3_phone TEXT,
-    witness3_id TEXT,
+    witness3_i_d TEXT,
     status TEXT NOT NULL DEFAULT 'active',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -122,7 +122,7 @@ DO $$ BEGIN
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS auto_invoice BOOLEAN DEFAULT true;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS guarantor_name TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS guarantor_phone TEXT;
-    ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS guarantor_id TEXT;
+    ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS guarantor_i_d TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS conditions TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS vehicle_make TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS vehicle_model TEXT;
@@ -131,13 +131,13 @@ DO $$ BEGIN
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS weapon_license TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness1_name TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness1_phone TEXT;
-    ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness1_id TEXT;
+    ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness1_i_d TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness2_name TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness2_phone TEXT;
-    ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness2_id TEXT;
+    ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness2_i_d TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness3_name TEXT;
     ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness3_phone TEXT;
-    ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness3_id TEXT;
+    ALTER TABLE "Lease" ADD COLUMN IF NOT EXISTS witness3_i_d TEXT;
 END $$;
 
 CREATE TABLE IF NOT EXISTS "Payment" (

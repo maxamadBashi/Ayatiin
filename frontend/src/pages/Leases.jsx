@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import LeaseModal from '../components/LeaseModal';
 import axios from '../utils/axios';
-import { Plus, FileText, Trash2, Edit } from 'lucide-react';
+import { Plus, FileText, Trash2, Edit, Eye } from 'lucide-react';
+import LeaseDetailsModal from '../components/LeaseDetailsModal';
 
 const Leases = () => {
     const [leases, setLeases] = useState([]);
@@ -12,6 +13,15 @@ const Leases = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentLease, setCurrentLease] = useState(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [selectedLease, setSelectedLease] = useState(null);
+
+    const getRelation = (lease, field, list = [], idField = 'id') => {
+        const val = lease[field];
+        if (val && typeof val === 'object') return val;
+        const idVal = val || lease[field + 'Id'] || lease[field + 'ID'];
+        return list.find(item => item[idField] === idVal || item._id === idVal) || {};
+    };
 
     useEffect(() => {
         fetchData();
@@ -74,29 +84,30 @@ const Leases = () => {
         setIsModalOpen(true);
     };
 
+    const handleView = (lease) => {
+        setSelectedLease(lease);
+        setIsDetailsOpen(true);
+    };
+
     const handleSubmit = async (formData) => {
         try {
+            let res;
             if (currentLease) {
-                const { data } = await axios.put(`/leases/${currentLease._id}`, formData);
-                const updatedLease = {
-                    ...data,
-                    tenant: tenants.find(t => t._id === formData.tenant),
-                    unit: units.find(u => u._id === formData.unit)
-                };
+                res = await axios.put(`/leases/${currentLease._id}`, formData);
+                const updatedLease = res.data;
                 setLeases(leases.map(l => l._id === currentLease._id ? updatedLease : l));
             } else {
-                const { data } = await axios.post('/leases', formData);
-                const newLease = {
-                    ...data,
-                    tenant: tenants.find(t => t._id === formData.tenant),
-                    unit: units.find(u => u._id === formData.unit)
-                };
-                setLeases([...leases, newLease]);
+                res = await axios.post('/leases', formData);
+                const newLease = res.data;
+                setLeases([newLease, ...leases]);
+                setExpandedLeaseId(newLease._id || newLease.id);
             }
             setIsModalOpen(false);
+            return { success: true };
         } catch (error) {
             console.error('Error saving lease', error);
-            setIsModalOpen(false);
+            const message = error.response?.data?.message || 'Error saving lease. Please check all fields.';
+            return { success: false, message };
         }
     };
 
@@ -152,13 +163,23 @@ const Leases = () => {
                                         #{lease.id?.split('-')[0] || 'N/A'}
                                     </td>
                                     <td className="p-4">
-                                        <div className="font-semibold text-gray-900">{lease.tenant?.name || 'N/A'}</div>
+                                        <div className="font-semibold text-gray-900">
+                                            {getRelation(lease, 'tenant', tenants).name || 'N/A'}
+                                        </div>
                                     </td>
                                     <td className="p-4">
                                         <div className="text-sm">
-                                            <span className="font-medium text-blue-600">{lease.unit?.property?.name || 'Property'}</span>
-                                            <span className="mx-1.5 text-gray-300">/</span>
-                                            <span className="text-gray-600 font-bold bg-gray-100 px-2 py-0.5 rounded text-xs">{lease.unit?.unitNumber || 'Unit'}</span>
+                                            {(() => {
+                                                const u = getRelation(lease, 'unit', units);
+                                                const p = getRelation(u, 'property', properties) || properties.find(prop => prop.id === u.propertyId || prop._id === u.propertyId) || {};
+                                                return (
+                                                    <>
+                                                        <span className="font-medium text-blue-600">{p.name || 'Property'}</span>
+                                                        <span className="mx-1.5 text-gray-300">/</span>
+                                                        <span className="text-gray-600 font-bold bg-gray-100 px-2 py-0.5 rounded text-xs">{u.unitNumber || 'Unit'}</span>
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
                                     </td>
                                     <td className="p-4">
@@ -182,6 +203,13 @@ const Leases = () => {
                                     </td>
                                     <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex gap-2 justify-end">
+                                            <button
+                                                onClick={() => handleView(lease)}
+                                                className="p-2 text-emerald-600 hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-emerald-100 active:scale-95"
+                                                title="View Full Details"
+                                            >
+                                                <Eye size={16} />
+                                            </button>
                                             <button
                                                 onClick={() => handleEdit(lease)}
                                                 className="p-2 text-blue-600 hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-blue-100 active:scale-95"
@@ -208,37 +236,90 @@ const Leases = () => {
                                                     <div>
                                                         <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
                                                             <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                                                            Guarantor Information
+                                                            Dammaanad-qaade (Guarantor)
                                                         </h4>
                                                         <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm space-y-2">
                                                             <div className="flex justify-between text-sm">
-                                                                <span className="text-gray-400">Name</span>
+                                                                <span className="text-gray-400">Magaca Full</span>
                                                                 <span className="font-semibold text-gray-800">{lease.guarantorName || lease.guarantor?.name || 'N/A'}</span>
                                                             </div>
                                                             <div className="flex justify-between text-sm">
-                                                                <span className="text-gray-400">Phone</span>
+                                                                <span className="text-gray-400">Taleefanka</span>
                                                                 <span className="font-semibold text-gray-800">{lease.guarantorPhone || lease.guarantor?.phone || 'N/A'}</span>
                                                             </div>
                                                             <div className="flex justify-between text-sm">
                                                                 <span className="text-gray-400">ID / Passport</span>
                                                                 <span className="font-semibold text-gray-800 font-mono">{lease.guarantorID || lease.guarantor?.idNumber || 'N/A'}</span>
                                                             </div>
+                                                            {(lease.guarantor?.idPhoto || lease.guarantor?.workIdPhoto) && (
+                                                                <div className="mt-3 pt-3 border-t border-gray-50 space-y-3">
+                                                                    <div className="flex gap-4">
+                                                                        {lease.guarantor?.idPhoto && (
+                                                                            <div className="space-y-1">
+                                                                                <p className="text-[9px] font-bold text-gray-400 uppercase">Sawirka ID</p>
+                                                                                <a
+                                                                                    href={`${import.meta.env.VITE_BACKEND_URL}/${lease.guarantor.idPhoto.replace(/\\/g, '/')}`}
+                                                                                    target="_blank"
+                                                                                    rel="noreferrer"
+                                                                                    className="block w-16 h-16 rounded-lg border border-gray-100 overflow-hidden hover:opacity-80 transition-opacity bg-gray-50"
+                                                                                >
+                                                                                    <img
+                                                                                        src={`${import.meta.env.VITE_BACKEND_URL}/${lease.guarantor.idPhoto.replace(/\\/g, '/')}`}
+                                                                                        alt="Guarantor ID"
+                                                                                        className="w-full h-full object-cover"
+                                                                                    />
+                                                                                </a>
+                                                                            </div>
+                                                                        )}
+                                                                        {lease.guarantor?.workIdPhoto && (
+                                                                            <div className="space-y-1">
+                                                                                <p className="text-[9px] font-bold text-gray-400 uppercase">Work ID</p>
+                                                                                <a
+                                                                                    href={`${import.meta.env.VITE_BACKEND_URL}/${lease.guarantor.workIdPhoto.replace(/\\/g, '/')}`}
+                                                                                    target="_blank"
+                                                                                    rel="noreferrer"
+                                                                                    className="block w-16 h-16 rounded-lg border border-gray-100 overflow-hidden hover:opacity-80 transition-opacity bg-gray-50"
+                                                                                >
+                                                                                    <img
+                                                                                        src={`${import.meta.env.VITE_BACKEND_URL}/${lease.guarantor.workIdPhoto.replace(/\\/g, '/')}`}
+                                                                                        alt="Work ID"
+                                                                                        className="w-full h-full object-cover"
+                                                                                    />
+                                                                                </a>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
 
                                                     <div className="space-y-3">
                                                         <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                                             <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
-                                                            Witnesses
+                                                            Markhaatiyada (Witnesses)
                                                         </h4>
                                                         {[1, 2, 3].map(i => (
                                                             lease[`witness${i}Name`] && (
-                                                                <div key={i} className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-gray-100 text-sm">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">{i}</div>
-                                                                        <span className="font-medium text-gray-700">{lease[`witness${i}Name`]}</span>
+                                                                <div key={i} className="bg-white/50 rounded-lg border border-gray-100 p-3 space-y-2">
+                                                                    <div className="flex items-center gap-2 mb-1">
+                                                                        <div className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">{i}</div>
+                                                                        <span className="text-[10px] font-bold text-gray-400 uppercase">Witness {i}</span>
                                                                     </div>
-                                                                    <span className="text-xs text-gray-400 font-mono">{lease[`witness${i}Phone`]}</span>
+                                                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                                                        <div>
+                                                                            <p className="text-[9px] text-gray-400 uppercase">Magaca</p>
+                                                                            <p className="font-semibold text-gray-700">{lease[`witness${i}Name`]}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[9px] text-gray-400 uppercase">Taleefanka</p>
+                                                                            <p className="font-mono text-gray-600">{lease[`witness${i}Phone`]}</p>
+                                                                        </div>
+                                                                        <div className="col-span-2 pt-1">
+                                                                            <p className="text-[9px] text-gray-400 uppercase">ID / Passport</p>
+                                                                            <p className="font-mono text-gray-600">{lease[`witness${i}ID`]}</p>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             )
                                                         ))}
@@ -343,6 +424,16 @@ const Leases = () => {
                 properties={properties}
                 guarantors={guarantors}
                 onRefreshData={fetchData}
+            />
+
+            <LeaseDetailsModal
+                isOpen={isDetailsOpen}
+                onClose={() => setIsDetailsOpen(false)}
+                lease={selectedLease}
+                allTenants={tenants}
+                allUnits={units}
+                allGuarantors={guarantors}
+                allProperties={properties}
             />
         </div>
     );
