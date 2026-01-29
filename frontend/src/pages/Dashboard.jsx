@@ -62,7 +62,7 @@ const Dashboard = () => {
         availableUnits: 5,
         maintenanceRequests: 3,
         customerRequests: 2,
-        landProperties: 4,
+        customerRequests: 2,
       });
     }
   };
@@ -149,14 +149,7 @@ const Dashboard = () => {
             color="bg-blue-600"
           />
         </Link>
-        <Link to="/land" className="block">
-          <StatCard
-            title="Total Land"
-            value={stats.landProperties}
-            icon={typeof MapPin !== 'undefined' ? <MapPin size={24} /> : <Building2 size={24} />}
-            color="bg-emerald-600"
-          />
-        </Link>
+
         <Link to="/units" className="block">
           <StatCard
             title="Total Units"
