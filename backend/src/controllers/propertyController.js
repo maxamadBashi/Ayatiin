@@ -44,14 +44,14 @@ const getPropertyById = async (req, res) => {
 // @access  Private/Admin
 const createProperty = async (req, res) => {
     try {
-        const { name, location, type, description, status, price, bedrooms, bathrooms, size, dimensions } = req.body;
+        const { name, type, address, city, ownerName, description, status, location } = req.body;
 
         // Validate required fields
         if (!name || !name.trim()) {
             return res.status(400).json({ message: 'Property name is required' });
         }
-        if (!location || !location.trim()) {
-            return res.status(400).json({ message: 'Location is required' });
+        if (!city || !city.trim()) {
+            return res.status(400).json({ message: 'City is required' });
         }
 
         // Validate property type
@@ -84,17 +84,24 @@ const createProperty = async (req, res) => {
         const property = await prisma.property.create({
             data: {
                 name: name.trim(),
-                location: location.trim(),
                 type: type || 'Apartment',
+                address: address?.trim() || '',
+                city: city.trim(),
+                ownerName: ownerName?.trim() || '',
+                location: location?.trim() || address?.trim() || '',
                 description: description?.trim() || '',
                 status: status || 'available',
-                size: size || '',
-                dimensions: dimensions || '',
-                price: price ? parseFloat(price) : null,
-                bedrooms: bedrooms ? parseInt(bedrooms) : null,
-                bathrooms: bathrooms ? parseInt(bathrooms) : null,
                 images,
             },
+        });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'CREATE_PROPERTY',
+                details: `Created property: ${property.name} (${property.id})`
+            }
         });
 
         res.status(201).json({ ...property, _id: property.id });
@@ -111,7 +118,7 @@ const createProperty = async (req, res) => {
 // @access  Private/Admin
 const updateProperty = async (req, res) => {
     try {
-        const { name, location, type, description, status, price, bedrooms, bathrooms, size, dimensions } = req.body;
+        const { name, type, address, city, ownerName, description, status, location } = req.body;
 
         // Handle image uploads
         let newImages = [];
@@ -125,17 +132,29 @@ const updateProperty = async (req, res) => {
             return res.status(404).json({ message: 'Property not found' });
         }
 
+        if (status !== undefined && status === 'inactive') {
+            const occupiedUnits = await prisma.unit.count({
+                where: {
+                    propertyId: req.params.id,
+                    status: 'occupied'
+                }
+            });
+            if (occupiedUnits > 0) {
+                return res.status(400).json({ message: 'Cannot set property to inactive while units are occupied' });
+            }
+        }
+
         const updateData = {};
         if (name !== undefined) updateData.name = name.trim();
-        if (location !== undefined) updateData.location = location.trim();
         if (type !== undefined) updateData.type = type;
+        if (address !== undefined) updateData.address = address.trim();
+        if (city !== undefined) updateData.city = city.trim();
+        if (ownerName !== undefined) updateData.ownerName = ownerName.trim();
+        if (location !== undefined) updateData.location = location.trim();
+        else if (address !== undefined) updateData.location = address.trim();
+
         if (description !== undefined) updateData.description = description.trim();
         if (status !== undefined) updateData.status = status;
-        if (size !== undefined) updateData.size = size;
-        if (dimensions !== undefined) updateData.dimensions = dimensions;
-        if (price !== undefined) updateData.price = parseFloat(price);
-        if (bedrooms !== undefined) updateData.bedrooms = parseInt(bedrooms);
-        if (bathrooms !== undefined) updateData.bathrooms = parseInt(bathrooms);
 
         if (newImages.length > 0) {
             updateData.images = [...(property.images || []), ...newImages];
@@ -144,6 +163,15 @@ const updateProperty = async (req, res) => {
         const updatedProperty = await prisma.property.update({
             where: { id: req.params.id },
             data: updateData,
+        });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'UPDATE_PROPERTY',
+                details: `Updated property: ${updatedProperty.name} (${updatedProperty.id})`
+            }
         });
 
         res.json({ ...updatedProperty, _id: updatedProperty.id });
@@ -160,10 +188,28 @@ const updateProperty = async (req, res) => {
 // @access  Private/Admin
 const deleteProperty = async (req, res) => {
     try {
-        const property = await prisma.property.findUnique({ where: { id: req.params.id } });
+        const property = await prisma.property.findUnique({
+            where: { id: req.params.id },
+            include: { units: true }
+        });
 
         if (property) {
+            const unitCount = await prisma.unit.count({ where: { propertyId: req.params.id } });
+            if (unitCount > 0) {
+                return res.status(400).json({ message: 'Cannot delete property with existing units' });
+            }
+
             await prisma.property.delete({ where: { id: req.params.id } });
+
+            // Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    userId: req.user.id,
+                    action: 'DELETE_PROPERTY',
+                    details: `Deleted property: ${property.name} (${property.id})`
+                }
+            });
+
             res.json({ message: 'Property removed' });
         } else {
             res.status(404).json({ message: 'Property not found' });

@@ -21,7 +21,7 @@ const UnitCard = ({ unit, onDelete, onEdit }) => {
     };
 
     return (
-        <div className="card border-l-4 border-blue-600">
+        <div className="card border-l-4 border-blue-600 bg-white shadow-lg p-6 rounded-xl">
             <div className="flex justify-between items-start">
                 <div>
                     <h3 className="text-lg font-bold text-gray-900">Unit {unit.unitNumber}</h3>

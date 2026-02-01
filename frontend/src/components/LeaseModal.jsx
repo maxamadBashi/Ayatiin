@@ -50,9 +50,12 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
 
     useEffect(() => {
         if (lease) {
+            console.log('🔍 LeaseModal - Editing lease:', lease);
+            console.log('🔍 Extracting IDs - tenantId:', lease.tenantId, 'unitId:', lease.unitId);
+
             setFormData({
-                tenant: lease.tenant?._id || lease.tenant?.id || lease.tenant || '',
-                unit: lease.unit?._id || lease.unit?.id || lease.unit || '',
+                tenant: lease.tenantId || lease.tenant?._id || lease.tenant?.id || lease.tenant || '',
+                unit: lease.unitId || lease.unit?._id || lease.unit?.id || lease.unit || '',
                 startDate: lease.startDate ? new Date(lease.startDate).toISOString().split('T')[0] : '',
                 endDate: lease.endDate ? new Date(lease.endDate).toISOString().split('T')[0] : '',
                 rentAmount: lease.rentAmount || '',
@@ -62,6 +65,8 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                 status: lease.status || 'active',
                 guarantorId: lease.guarantorId || (lease.guarantor?._id || lease.guarantor?.id || ''),
                 guarantorName: lease.guarantorName || '',
+                guarantorPhone: lease.guarantorPhone || '',
+                guarantorID: lease.guarantorID || '',
                 conditions: lease.conditions || '',
                 vehicleMake: lease.vehicleMake || '',
                 vehicleModel: lease.vehicleModel || '',
@@ -77,10 +82,12 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                 witness3Name: lease.witness3Name || '',
                 witness3Phone: lease.witness3Phone || '',
                 witness3ID: lease.witness3ID || '',
-                property: units.find(u => (u._id || u.id) === (lease.unit?._id || lease.unit?.id || lease.unit))?.property?._id ||
-                    units.find(u => (u._id || u.id) === (lease.unit?._id || lease.unit?.id || lease.unit))?.property?.id ||
-                    units.find(u => (u._id || u.id) === (lease.unit?._id || lease.unit?.id || lease.unit))?.property || ''
+                property: units.find(u => (u._id || u.id) === (lease.unitId || lease.unit?._id || lease.unit?.id || lease.unit))?.property?._id ||
+                    units.find(u => (u._id || u.id) === (lease.unitId || lease.unit?._id || lease.unit?.id || lease.unit))?.property?.id ||
+                    units.find(u => (u._id || u.id) === (lease.unitId || lease.unit?._id || lease.unit?.id || lease.unit))?.propertyId || ''
             });
+
+            console.log('✅ Form data populated - tenant:', lease.tenantId, 'unit:', lease.unitId);
         } else {
             resetForm();
         }
@@ -123,6 +130,21 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+
+        // Auto-populate rent amount when unit is selected
+        if (name === 'unit' && value) {
+            const selectedUnit = units.find(u => (u._id || u.id) === value);
+            if (selectedUnit && selectedUnit.rentAmount) {
+                setFormData((prev) => ({
+                    ...prev,
+                    unit: value,
+                    rentAmount: selectedUnit.rentAmount
+                }));
+                console.log('✅ Auto-populated rent amount:', selectedUnit.rentAmount, 'from unit:', selectedUnit.unitNumber);
+                return;
+            }
+        }
+
         setFormData((prev) => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value
@@ -140,6 +162,15 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
         if (!formData.startDate) return setError("Start Date is required");
         if (!formData.endDate) return setError("End Date is required");
         if (!formData.rentAmount) return setError("Rent Amount is required");
+
+        // Check if property has units
+        const propertyUnits = units.filter(u => {
+            const unitPropertyId = u.property?._id || u.property?.id || u.property;
+            return unitPropertyId === formData.property;
+        });
+        if (propertyUnits.length === 0) {
+            return setError("Selected property has no units. Please add units to the property before creating a lease.");
+        }
 
         // Guarantor Validation (Must have ID or Manual Name)
         if (!formData.guarantorId && !formData.guarantorName) {
@@ -221,8 +252,8 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-                <div className="flex justify-between items-center p-6 border-b bg-gray-50">
+            <div className="bg-slate-50 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                <div className="flex justify-between items-center p-6 border-b border-slate-200 flex-shrink-0 bg-slate-50">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900">
                             {lease ? 'Update Lease Contract' : 'New Lease Contract'}
@@ -234,7 +265,7 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                     </button>
                 </div>
 
-                <div className="flex bg-gray-100 p-2 overflow-x-auto gap-1">
+                <div className="flex bg-slate-100 p-2 overflow-x-auto gap-1 border-b border-slate-200">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
@@ -263,7 +294,7 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 bg-slate-50">
                     {activeTab === 'basic' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -327,17 +358,45 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                                             className="flex-1 px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         >
                                             <option value="">Select Unit</option>
-                                            {units
-                                                .filter(u => {
-                                                    const matchProp = !formData.property || (u.property?._id || u.property?.id || u.property) === formData.property;
-                                                    const matchStatus = u.status === 'available' || (lease && (u._id === lease.unit?._id || u.id === lease.unit?.id || u._id === lease.unit || u.id === lease.unit));
+                                            {(() => {
+                                                const filteredUnits = units.filter(u => {
+                                                    // Check both direct propertyId field and nested property object
+                                                    const unitPropertyId = u.propertyId || u.property?.id || u.property?._id;
+                                                    const matchProp = !formData.property || unitPropertyId === formData.property;
+
+                                                    // For new leases: only show available units
+                                                    // For editing: show available units OR the current lease's unit (even if occupied)
+                                                    let matchStatus;
+                                                    if (lease) {
+                                                        // Editing mode: allow current unit even if occupied
+                                                        matchStatus = u.status === 'available' ||
+                                                            u._id === lease.unitId ||
+                                                            u.id === lease.unitId ||
+                                                            u._id === lease.unit?._id ||
+                                                            u.id === lease.unit?.id;
+                                                    } else {
+                                                        // New lease mode: only available units
+                                                        matchStatus = u.status === 'available';
+                                                    }
+
+                                                    if (formData.property) {
+                                                        console.log(`Unit ${u.unitNumber}: propertyId=${unitPropertyId}, selectedProperty=${formData.property}, status=${u.status}, match=${matchProp && matchStatus}`);
+                                                    }
+
                                                     return matchProp && matchStatus;
-                                                })
-                                                .map(u => (
+                                                });
+
+                                                if (formData.property && filteredUnits.length === 0) {
+                                                    console.warn('⚠️ No units found for selected property:', formData.property);
+                                                    console.log('Available units:', units.map(u => ({ id: u._id || u.id, number: u.unitNumber, propertyId: u.propertyId, status: u.status, nestedProp: u.property?.id })));
+                                                }
+
+                                                return filteredUnits.map(u => (
                                                     <option key={u._id || u.id} value={u._id || u.id}>
                                                         {u.unitNumber}
                                                     </option>
-                                                ))}
+                                                ));
+                                            })()}
                                         </select>
                                         <button
                                             type="button"
@@ -499,7 +558,7 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                     )}
                 </form>
 
-                <div className="p-6 border-t bg-gray-50 flex items-center justify-between">
+                <div className="p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
                     <div className="flex gap-2">
                         {tabs.map((tab, idx) => (
                             <div

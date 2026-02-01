@@ -62,7 +62,9 @@ const PropertyCard = ({ property, onDelete, onEdit }) => {
 
         <div className="flex items-center gap-2 text-gray-500 mb-3">
           <MapPin size={16} />
-          <span className="text-sm">{property.address}</span>
+          <span className="text-sm">
+            {property.city}{property.address ? `, ${property.address}` : ''}
+          </span>
         </div>
 
         <p className="text-sm text-gray-600 line-clamp-2">{property.description}</p>

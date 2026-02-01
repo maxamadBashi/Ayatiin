@@ -26,15 +26,34 @@ const createMaintenanceRequest = async (req, res) => {
     const { property, unit, description, priority, issue } = req.body;
 
     try {
+        if (unit) {
+            const unitData = await prisma.unit.findUnique({ where: { id: unit } });
+            if (unitData && unitData.status === 'available') {
+                await prisma.unit.update({
+                    where: { id: unit },
+                    data: { status: 'maintenance' }
+                });
+            }
+        }
+
         const request = await prisma.maintenance.create({
             data: {
                 propertyId: property,
                 unitId: unit,
-                userId: req.user.id, // Using authenticated user's ID
+                userId: req.user.id,
                 issue: issue || 'General',
                 description,
                 priority: priority || 'medium',
             },
+        });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'CREATE_MAINTENANCE',
+                details: `Created maintenance request: ${request.issue} (${request.id})`
+            }
         });
 
         res.status(201).json({ ...request, _id: request.id });
@@ -53,6 +72,10 @@ const updateMaintenanceRequest = async (req, res) => {
         const request = await prisma.maintenance.findUnique({ where: { id: req.params.id } });
 
         if (request) {
+            if (request.status === 'closed' || request.status === 'completed') {
+                return res.status(400).json({ message: 'Cannot update a closed maintenance request' });
+            }
+
             const updatedRequest = await prisma.maintenance.update({
                 where: { id: req.params.id },
                 data: {
@@ -60,6 +83,27 @@ const updateMaintenanceRequest = async (req, res) => {
                     cost: cost ? parseFloat(cost) : request.cost,
                 },
             });
+
+            // If status becomes closed, and it was a unit maintenance, set unit to available if it was in maintenance
+            if ((status === 'closed' || status === 'completed') && request.unitId) {
+                const unitData = await prisma.unit.findUnique({ where: { id: request.unitId } });
+                if (unitData && unitData.status === 'maintenance') {
+                    await prisma.unit.update({
+                        where: { id: request.unitId },
+                        data: { status: 'available' }
+                    });
+                }
+            }
+
+            // Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    userId: req.user.id,
+                    action: 'UPDATE_MAINTENANCE',
+                    details: `Updated maintenance request: ${updatedRequest.id} (Status: ${status})`
+                }
+            });
+
             res.json({ ...updatedRequest, _id: updatedRequest.id });
         } else {
             res.status(404).json({ message: 'Maintenance request not found' });
@@ -78,6 +122,16 @@ const deleteMaintenanceRequest = async (req, res) => {
 
         if (request) {
             await prisma.maintenance.delete({ where: { id: req.params.id } });
+
+            // Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    userId: req.user.id,
+                    action: 'DELETE_MAINTENANCE',
+                    details: `Deleted maintenance request: ${request.id}`
+                }
+            });
+
             res.json({ message: 'Maintenance request removed' });
         } else {
             res.status(404).json({ message: 'Maintenance request not found' });

@@ -61,6 +61,15 @@ const createGuarantor = async (req, res) => {
                 workIdPhoto: req.files && req.files.workIdPhoto ? `/uploads/${req.files.workIdPhoto[0].filename}` : data.workIdPhoto,
             }
         });
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'CREATE_GUARANTOR',
+                details: `Created guarantor: ${guarantor.name} (${guarantor.id})`
+            }
+        });
+
         res.status(201).json({ ...guarantor, _id: guarantor.id });
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -81,6 +90,16 @@ const updateGuarantor = async (req, res) => {
                 workIdPhoto: req.files && req.files.workIdPhoto ? `/uploads/${req.files.workIdPhoto[0].filename}` : data.workIdPhoto,
             }
         });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'UPDATE_GUARANTOR',
+                details: `Updated guarantor: ${guarantor.name} (${guarantor.id})`
+            }
+        });
+
         res.json({ ...guarantor, _id: guarantor.id });
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -92,7 +111,20 @@ const updateGuarantor = async (req, res) => {
 // @access  Private
 const deleteGuarantor = async (req, res) => {
     try {
+        const guarantor = await prisma.guarantor.findUnique({ where: { id: req.params.id } });
+        if (!guarantor) return res.status(404).json({ message: 'Guarantor not found' });
+
         await prisma.guarantor.delete({ where: { id: req.params.id } });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'DELETE_GUARANTOR',
+                details: `Deleted guarantor: ${guarantor.name} (${guarantor.id})`
+            }
+        });
+
         res.json({ message: 'Guarantor removed' });
     } catch (error) {
         res.status(500).json({ message: error.message });

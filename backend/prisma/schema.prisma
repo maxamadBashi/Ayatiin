@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum UserRole {
@@ -55,13 +54,11 @@ enum PropertyStatus {
 model Property {
   id          String         @id @default(uuid())
   name        String
-  location    String
   type        PropertyType   @default(Apartment)
-  size        String?
-  dimensions  String?
-  price       Float?
-  bedrooms    Int?
-  bathrooms   Int?
+  address     String?
+  city        String
+  ownerName   String?
+  location    String?        // Keeping for backward compatibility or general area
   description String?
   status      PropertyStatus @default(available)
   images      String[]
@@ -94,6 +91,7 @@ model Tenant {
   phone         String
   idNumber      String?
   emergencyContact String?
+  status        String   @default("active")
   createdAt     DateTime @default(now())
 
   leases        Lease[]

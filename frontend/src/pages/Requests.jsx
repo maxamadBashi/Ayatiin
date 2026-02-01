@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../utils/axios';
-import { MessageSquare, Check, X, Clock } from 'lucide-react';
+import { MessageSquare, Check, X, Clock, Sparkles } from 'lucide-react';
 
 const Requests = () => {
     const [requests, setRequests] = useState([]);
@@ -25,7 +25,7 @@ const Requests = () => {
         if (!window.confirm(`Are you sure you want to ${status} this request?`)) {
             return;
         }
-        
+
         try {
             await axios.patch(`/requests/${id}/status`, { status });
             fetchRequests();
@@ -51,48 +51,67 @@ const Requests = () => {
     const completedCount = requests.filter(r => r.status === 'completed').length;
 
     return (
-        <div className="p-6">
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">Customer Booking & Purchase Requests</h1>
-                <p className="text-gray-600">Manage customer requests for booking or purchasing properties</p>
+        <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+            {/* --- HEADER SECTION --- */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-500/20">
+                        <MessageSquare size={28} />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-full">CRM</span>
+                            <Sparkles size={12} className="text-amber-400" />
+                        </div>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Booking Requests</h1>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Found {requests.length} Incoming Leads</p>
+                    </div>
+                </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-yellow-700 font-medium">Pending</p>
-                            <p className="text-2xl font-bold text-yellow-800 mt-1">{pendingCount}</p>
+            {/* --- SUMMARY CARDS --- */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 -mr-8 -mt-8 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Pending</p>
+                    <div className="flex items-end justify-between relative z-10">
+                        <h3 className="text-3xl font-black text-slate-800">{pendingCount}</h3>
+                        <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                            <Clock size={20} />
                         </div>
-                        <Clock className="text-yellow-600" size={24} />
                     </div>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-blue-700 font-medium">Approved</p>
-                            <p className="text-2xl font-bold text-blue-800 mt-1">{approvedCount}</p>
+
+                <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 -mr-8 -mt-8 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Approved</p>
+                    <div className="flex items-end justify-between relative z-10">
+                        <h3 className="text-3xl font-black text-slate-800">{approvedCount}</h3>
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                            <Check size={20} />
                         </div>
-                        <Check className="text-blue-600" size={24} />
                     </div>
                 </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-red-700 font-medium">Rejected</p>
-                            <p className="text-2xl font-bold text-red-800 mt-1">{rejectedCount}</p>
+
+                <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/5 -mr-8 -mt-8 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Rejected</p>
+                    <div className="flex items-end justify-between relative z-10">
+                        <h3 className="text-3xl font-black text-slate-800">{rejectedCount}</h3>
+                        <div className="p-2 bg-red-50 text-red-600 rounded-xl">
+                            <X size={20} />
                         </div>
-                        <X className="text-red-600" size={24} />
                     </div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-green-700 font-medium">Completed</p>
-                            <p className="text-2xl font-bold text-green-800 mt-1">{completedCount}</p>
+
+                <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 -mr-8 -mt-8 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Completed</p>
+                    <div className="flex items-end justify-between relative z-10">
+                        <h3 className="text-3xl font-black text-slate-800">{completedCount}</h3>
+                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <Check size={20} />
                         </div>
-                        <Check className="text-green-600" size={24} />
                     </div>
                 </div>
             </div>

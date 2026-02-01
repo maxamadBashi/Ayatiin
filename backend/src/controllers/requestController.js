@@ -58,6 +58,15 @@ const createRequest = async (req, res) => {
             }
         });
 
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'CREATE_REQUEST',
+                details: `Created request type ${type}: ${subject} (${request.id})`
+            }
+        });
+
         res.status(201).json({ ...request, _id: request.id, customer: request.user });
     } catch (error) {
         console.error('Error creating request:', error);
@@ -87,6 +96,15 @@ const updateRequestStatus = async (req, res) => {
             data: { status },
             include: {
                 user: { select: { id: true, name: true, email: true } }
+            }
+        });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'UPDATE_REQUEST_STATUS',
+                details: `Updated request ${req.params.id} status to ${status}`
             }
         });
 

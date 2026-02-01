@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LeaseModal from '../components/LeaseModal';
 import axios from '../utils/axios';
-import { Plus, FileText, Trash2, Edit, Eye } from 'lucide-react';
+import { Plus, FileText, Trash2, Edit, Eye, Sparkles, AlertCircle } from 'lucide-react';
 import LeaseDetailsModal from '../components/LeaseDetailsModal';
 
 const Leases = () => {
@@ -15,6 +15,20 @@ const Leases = () => {
     const [currentLease, setCurrentLease] = useState(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedLease, setSelectedLease] = useState(null);
+
+    // Helper function to check if lease has complete guarantor data
+    const isLeaseDataComplete = (lease) => {
+        // If there's a linked guarantor, it's complete
+        if (lease.guarantorId || lease.guarantor?.id || lease.guarantor?._id) {
+            return true;
+        }
+        // If all manual guarantor fields are filled, it's complete
+        if (lease.guarantorName && lease.guarantorPhone && lease.guarantorID) {
+            return true;
+        }
+        // Otherwise, it's incomplete
+        return false;
+    };
 
     const getRelation = (lease, field, list = [], idField = 'id') => {
         const val = lease[field];
@@ -69,7 +83,9 @@ const Leases = () => {
                 await axios.delete(`/leases/${id}`);
                 setLeases(leases.filter(l => l._id !== id));
             } catch (error) {
-                setLeases(leases.filter(l => l._id !== id));
+                console.error('Error deleting lease', error);
+                const errorMessage = error.response?.data?.message || 'Failed to delete lease.';
+                alert(errorMessage);
             }
         }
     };
@@ -118,18 +134,31 @@ const Leases = () => {
     };
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Lease Contracts</h1>
-                    <p className="text-gray-500 text-sm">Manage and view detailed lease agreements</p>
+        <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+            {/* --- HEADER SECTION --- */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-500/20">
+                        <FileText size={28} />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">Legal</span>
+                            <Sparkles size={12} className="text-amber-400" />
+                        </div>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Lease Contracts</h1>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Found {leases.length} Secured Agreements</p>
+                    </div>
                 </div>
+
                 <button
                     onClick={handleAdd}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-95 font-bold"
+                    className="flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-[20px] font-black text-sm shadow-xl hover:bg-slate-800 hover:scale-105 transition-all active:scale-95 group"
                 >
-                    <Plus size={20} />
-                    New Lease
+                    <div className="p-1.5 bg-white/10 rounded-lg group-hover:rotate-90 transition-transform duration-300">
+                        <Plus size={18} />
+                    </div>
+                    <span>Issue New Lease</span>
                 </button>
             </div>
 
@@ -193,13 +222,24 @@ const Leases = () => {
                                         {new Date(lease.endDate).toLocaleDateString(undefined, { year: '2-digit', month: 'short', day: 'numeric' })}
                                     </td>
                                     <td className="p-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${lease.status === 'active'
-                                            ? 'bg-green-50 text-green-700 border-green-100'
-                                            : 'bg-red-50 text-red-700 border-red-100'
-                                            }`}>
-                                            <span className={`w-1 h-1 rounded-full mr-1.5 ${lease.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                            {lease.status}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${lease.status === 'active'
+                                                ? 'bg-green-50 text-green-700 border-green-100'
+                                                : 'bg-red-50 text-red-700 border-red-100'
+                                                }`}>
+                                                <span className={`w-1 h-1 rounded-full mr-1.5 ${lease.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                {lease.status}
+                                            </span>
+                                            {!isLeaseDataComplete(lease) && (
+                                                <div className="group relative">
+                                                    <AlertCircle size={16} className="text-red-500" />
+                                                    <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg z-10">
+                                                        <div className="font-bold mb-1">Incomplete Data</div>
+                                                        <div className="text-[10px] opacity-90">Missing guarantor information. Please complete all guarantor fields.</div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex gap-2 justify-end">
@@ -237,6 +277,18 @@ const Leases = () => {
                                                         <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
                                                             <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
                                                             Dammaanad-qaade (Guarantor)
+                                                            {!isLeaseDataComplete(lease) && (
+                                                                <div className="group relative ml-auto">
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[9px] font-bold border border-red-200">
+                                                                        <AlertCircle size={10} />
+                                                                        Incomplete
+                                                                    </span>
+                                                                    <div className="absolute top-full left-0 mt-1 hidden group-hover:block w-56 p-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg z-10">
+                                                                        <div className="font-bold mb-1">Missing Information</div>
+                                                                        <div className="text-[10px] opacity-90">Please complete all guarantor fields or link to an existing guarantor profile.</div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </h4>
                                                         <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm space-y-2">
                                                             <div className="flex justify-between text-sm">

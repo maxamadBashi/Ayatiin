@@ -40,8 +40,21 @@ const createLease = async (req, res) => {
     witness3Name, witness3Phone, witness3ID
   } = req.body;
 
+  // Validate dates
+  if (new Date(startDate) >= new Date(endDate)) {
+    return res.status(400).json({ message: 'Lease start date must be before end date' });
+  }
 
   try {
+    // Check unit availability
+    const targetUnit = await prisma.unit.findUnique({ where: { id: unit } });
+    if (!targetUnit) {
+      return res.status(404).json({ message: 'Unit not found' });
+    }
+    if (targetUnit.status !== 'available') {
+      return res.status(400).json({ message: `Unit is not available (Status: ${targetUnit.status})` });
+    }
+
     const cleanGuarantorId = guarantorId && guarantorId.trim() !== '' ? guarantorId : null;
 
     const lease = await prisma.lease.create({
@@ -90,6 +103,21 @@ const createLease = async (req, res) => {
       }
     });
 
+    // Update unit status to occupied
+    await prisma.unit.update({
+      where: { id: unit },
+      data: { status: 'occupied' }
+    });
+
+    // Audit Log
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'CREATE_LEASE',
+        details: `Created lease for unit ${targetUnit.unitNumber} (${lease.id})`
+      }
+    });
+
     res.status(201).json({ ...fullLease, _id: fullLease.id });
   } catch (error) {
     console.error('Create Lease Error:', error);
@@ -127,7 +155,16 @@ const updateLease = async (req, res) => {
       if (deposit !== undefined) updateData.deposit = parseFloat(deposit);
       if (rentCycle) updateData.rentCycle = rentCycle;
       if (autoInvoice !== undefined) updateData.autoInvoice = autoInvoice;
-      if (status) updateData.status = status;
+      if (status) {
+        updateData.status = status;
+        // If status changes to completed/terminated, set unit to available
+        if (status === 'completed' || status === 'terminated' || status === 'expired') {
+          await prisma.unit.update({
+            where: { id: lease.unitId },
+            data: { status: 'available' }
+          });
+        }
+      }
       if (guarantorName !== undefined) updateData.guarantorName = guarantorName;
       if (guarantorPhone !== undefined) updateData.guarantorPhone = guarantorPhone;
       if (guarantorID !== undefined) updateData.guarantorID = guarantorID;
@@ -165,6 +202,15 @@ const updateLease = async (req, res) => {
             }
           },
           guarantor: true
+        }
+      });
+
+      // Audit Log
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'UPDATE_LEASE',
+          details: `Updated lease: ${updatedLease.id}`
         }
       });
 

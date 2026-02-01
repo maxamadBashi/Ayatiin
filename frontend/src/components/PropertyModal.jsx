@@ -1,46 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Building2, MapPin, User, Layout, Info, Image, Plus, Check } from 'lucide-react';
 
 const PropertyModal = ({ isOpen, onClose, onSubmit, property, isLand }) => {
     const [formData, setFormData] = useState({
         name: '',
-        location: '',
         type: isLand ? 'Land' : 'Apartment',
+        address: '',
+        city: '',
+        ownerName: '',
+        location: '',
         description: '',
         status: 'available',
-        price: '',
-        bedrooms: '',
-        bathrooms: '',
     });
     const [images, setImages] = useState([]);
+    const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
         if (property) {
             setFormData({
                 name: property.name || '',
-                location: property.location || property.address || '',
                 type: property.type || 'Apartment',
+                address: property.address || '',
+                city: property.city || '',
+                ownerName: property.ownerName || '',
+                location: property.location || '',
                 description: property.description || '',
                 status: property.status || 'available',
-                price: property.price || '',
-                bedrooms: property.bedrooms || '',
-                bathrooms: property.bathrooms || '',
-                size: property.size || '',
-                dimensions: property.dimensions || '',
             });
-            setImages([]); // Reset images on edit open
+            setImages([]);
         } else {
             setFormData({
                 name: '',
-                location: '',
                 type: isLand ? 'Land' : 'Apartment',
+                address: '',
+                city: '',
+                ownerName: '',
+                location: '',
                 description: '',
                 status: 'available',
-                price: '',
-                bedrooms: '',
-                bathrooms: '',
-                size: '',
-                dimensions: '',
             });
             setImages([]);
         }
@@ -59,15 +56,13 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, property, isLand }) => {
         e.preventDefault();
         const data = new FormData();
         data.append('name', formData.name);
-        data.append('location', formData.location);
         data.append('type', formData.type);
+        data.append('address', formData.address);
+        data.append('city', formData.city);
+        data.append('ownerName', formData.ownerName);
+        data.append('location', formData.location || formData.address);
         data.append('description', formData.description);
         data.append('status', formData.status);
-        if (formData.price) data.append('price', Number(formData.price));
-        if (formData.bedrooms) data.append('bedrooms', Number(formData.bedrooms));
-        if (formData.bathrooms) data.append('bathrooms', Number(formData.bathrooms));
-        if (formData.size) data.append('size', formData.size);
-        if (formData.dimensions) data.append('dimensions', formData.dimensions);
 
         for (let i = 0; i < images.length; i++) {
             data.append('images', images[i]);
@@ -79,223 +74,226 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, property, isLand }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        {property ? 'Edit Property' : 'Add Property'}
-                    </h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+                {/* Header */}
+                <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white">
+                    <div>
+                        <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
+                            {property ? 'Edit Property' : (isLand ? 'Add New Land' : 'Add New Property')}
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-0.5">Please fill in the fields marked with (*)</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all duration-200"
+                    >
                         <X size={24} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Property Name
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
+                {/* Form Content */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+                    <div className="p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Section 1: Aasaaska */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2 border-b border-blue-100 pb-2">
+                                    <Building2 size={18} className="text-blue-600" />
+                                    <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">General Information</h3>
+                                </div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Location
-                        </label>
-                        <input
-                            type="text"
-                            name="location"
-                            value={formData.location}
-                            onChange={handleChange}
-                            required
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-
-                    {!formData.type.includes('Land') && (
-                        <>
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Price
+                                <div className="space-y-1.5 focus-within:transform focus-within:translate-x-1 transition-transform duration-200">
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                        {isLand ? 'Land Name' : 'Property Name'} *
                                     </label>
                                     <input
-                                        type="number"
-                                        name="price"
-                                        value={formData.price}
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
                                         onChange={handleChange}
                                         required
-                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Tusaale: Villa Ayatiin"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Bedrooms
+
+                                <div className="space-y-1.5 focus-within:transform focus-within:translate-x-1 transition-transform duration-200">
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                        Type *
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            name="type"
+                                            value={formData.type}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none appearance-none"
+                                        >
+                                            {isLand ? (
+                                                <>
+                                                    <option value="Land">Land</option>
+                                                    <option value="Land for Sale">Land for Sale</option>
+                                                    <option value="Commercial Land">Commercial Land</option>
+                                                    <option value="Residential Land">Residential Land</option>
+                                                    <option value="Farm Land">Farm Land</option>
+                                                    <option value="Investment Land">Investment Land</option>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <option value="Apartment">Apartment</option>
+                                                    <option value="House">House</option>
+                                                    <option value="Villa">Villa</option>
+                                                    <option value="Commercial">Commercial</option>
+                                                </>
+                                            )}
+                                        </select>
+                                        <Layout size={18} className="absolute right-4 top-3.5 text-slate-400 pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5 focus-within:transform focus-within:translate-x-1 transition-transform duration-200">
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                        Owner Name
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="ownerName"
+                                            value={formData.ownerName}
+                                            onChange={handleChange}
+                                            placeholder="Enter owner name"
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none"
+                                        />
+                                        <User size={18} className="absolute left-4 top-3.5 text-slate-400" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: Goobta & Xaaladda */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2 border-b border-blue-100 pb-2">
+                                    <MapPin size={18} className="text-blue-600" />
+                                    <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Location & Status</h3>
+                                </div>
+
+                                <div className="space-y-1.5 focus-within:transform focus-within:translate-x-1 transition-transform duration-200">
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                        City *
                                     </label>
                                     <input
-                                        type="number"
-                                        name="bedrooms"
-                                        value={formData.bedrooms}
+                                        type="text"
+                                        name="city"
+                                        value={formData.city}
                                         onChange={handleChange}
                                         required
-                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Mogadishu, Hargeisa, etc."
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Bathrooms
-                                </label>
-                                <input
-                                    type="number"
-                                    name="bathrooms"
-                                    value={formData.bathrooms}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                            </div>
-                        </>
-                    )}
+                                <div className="space-y-1.5 focus-within:transform focus-within:translate-x-1 transition-transform duration-200">
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                        Address
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="address"
+                                            value={formData.address}
+                                            onChange={handleChange}
+                                            placeholder="District, street, etc."
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none"
+                                        />
+                                        <MapPin size={18} className="absolute left-4 top-3.5 text-slate-400" />
+                                    </div>
+                                </div>
 
-                    {formData.type.includes('Land') && (
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Price
-                            </label>
-                            <input
-                                type="number"
-                                name="price"
-                                value={formData.price}
-                                onChange={handleChange}
-                                required
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    )}
-
-                    {formData.type.includes('Land') && (
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Size (e.g., 1200 sqm)
-                                </label>
-                                <input
-                                    type="text"
-                                    name="size"
-                                    value={formData.size || ''}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Dimensions (e.g., 20x30)
-                                </label>
-                                <input
-                                    type="text"
-                                    name="dimensions"
-                                    value={formData.dimensions || ''}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
+                                <div className="space-y-1.5 focus-within:transform focus-within:translate-x-1 transition-transform duration-200">
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                        Status
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            name="status"
+                                            value={formData.status}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none appearance-none"
+                                        >
+                                            <option value="available">Available</option>
+                                            <option value="rented">Rented</option>
+                                            <option value="sold">Sold</option>
+                                        </select>
+                                        <Check size={18} className="absolute right-4 top-3.5 text-slate-400 pointer-events-none" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    )}
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Type
-                            </label>
-                            <select
-                                name="type"
-                                value={formData.type}
-                                onChange={handleChange}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                                {isLand ? (
-                                    <>
-                                        <option value="Land">Land</option>
-                                        <option value="Land for Sale">Land for Sale</option>
-                                        <option value="Commercial Land">Commercial Land</option>
-                                        <option value="Residential Land">Residential Land</option>
-                                        <option value="Farm Land">Farm Land</option>
-                                        <option value="Investment Land">Investment Land</option>
-                                    </>
-                                ) : (
-                                    <>
-                                        <option value="Apartment">Apartment</option>
-                                        <option value="House">House</option>
-                                        <option value="Villa">Villa</option>
-                                        <option value="Commercial">Commercial</option>
-                                    </>
-                                )}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Status
-                            </label>
-                            <select
-                                name="status"
-                                value={formData.status}
-                                onChange={handleChange}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                                <option value="available">Available</option>
-                                <option value="rented">Rented</option>
-                                <option value="sold">Sold</option>
-                            </select>
+                        {/* Description & Images */}
+                        <div className="mt-10 space-y-8">
+                            <div className="space-y-1.5">
+                                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <Info size={18} className="text-blue-600" />
+                                    Description
+                                </label>
+                                <textarea
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    rows="4"
+                                    placeholder="Provide additional details..."
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all outline-none resize-none"
+                                ></textarea>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <Image size={18} className="text-blue-600" />
+                                    {isLand ? 'Land Images' : 'Property Images'}
+                                </label>
+                                <div
+                                    className={`relative mt-1 flex justify-center px-8 py-10 border-2 border-dashed rounded-2xl transition-all duration-300 ${images.length > 0 ? 'bg-blue-50 border-blue-400' : 'bg-slate-50 border-slate-200 hover:border-blue-300'
+                                        }`}
+                                >
+                                    <div className="space-y-2 text-center">
+                                        <div className={`mx-auto h-16 w-16 rounded-full flex items-center justify-center transition-colors duration-300 ${images.length > 0 ? 'bg-blue-100 text-blue-600' : 'bg-white text-slate-400 shadow-sm'
+                                            }`}>
+                                            <Image size={32} />
+                                        </div>
+                                        <div className="flex flex-col text-sm text-slate-600">
+                                            <label className="relative cursor-pointer font-bold text-blue-600 hover:text-blue-700 focus-within:outline-none transition-colors">
+                                                <span>Upload images</span>
+                                                <input type="file" multiple onChange={handleImageChange} className="sr-only" />
+                                            </label>
+                                            <p className="text-slate-400">or drag and drop</p>
+                                        </div>
+                                        {images.length > 0 && (
+                                            <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold inline-block animate-bounce shadow-md">
+                                                {images.length} Image(s) selected
+                                            </div>
+                                        )}
+                                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest pt-2">PNG, JPG, GIF (Max 10MB)</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Images
-                        </label>
-                        <input
-                            type="file"
-                            multiple
-                            onChange={handleImageChange}
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Description
-                        </label>
-                        <textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            rows="3"
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        ></textarea>
-                    </div>
-
-                    <div className="flex justify-end gap-3">
+                    {/* Footer Actions */}
+                    <div className="sticky bottom-0 bg-white/80 backdrop-blur-md px-8 py-6 border-t border-slate-100 flex justify-end gap-4 z-20">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                            className="px-8 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-all duration-200 active:scale-95 border border-slate-200"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 active:scale-95 flex items-center gap-2"
                         >
-                            {property ? 'Update Property' : 'Add Property'}
+                            <Plus size={20} />
+                            {property ? 'Update' : (isLand ? 'Save Land' : 'Save Property')}
                         </button>
                     </div>
                 </form>

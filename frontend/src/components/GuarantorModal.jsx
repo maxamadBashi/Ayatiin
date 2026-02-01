@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload } from 'lucide-react';
+import { X, User, Phone, Mail, FileText, Upload, Plus, ShieldCheck, Briefcase } from 'lucide-react';
 
 const GuarantorModal = ({ isOpen, onClose, onSubmit, guarantor }) => {
     const [formData, setFormData] = useState({
@@ -59,80 +59,179 @@ const GuarantorModal = ({ isOpen, onClose, onSubmit, guarantor }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
-                <div className="flex justify-between items-center p-6 border-b bg-gray-50">
-                    <h2 className="text-xl font-bold text-gray-900">
-                        {guarantor ? 'Edit Guarantor' : 'Add New Guarantor'}
-                    </h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
-                        <X size={20} />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
+            <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+                {/* Header */}
+                <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-teal-50 to-white">
+                    <div>
+                        <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
+                            {guarantor ? 'Edit Guarantor' : 'New Guarantor Record'}
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-0.5">Secure lease agreements with secondary verification</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all duration-200"
+                    >
+                        <X size={24} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
-                    <div className="space-y-1">
-                        <label className="text-sm font-semibold text-gray-700">Full Name *</label>
-                        <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-semibold text-gray-700">Phone *</label>
-                            <input type="text" name="phone" value={formData.phone} onChange={handleChange} required className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-semibold text-gray-700">Email</label>
-                            <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-sm font-semibold text-gray-700">ID / Passport Number *</label>
-                        <input type="text" name="idNumber" value={formData.idNumber} onChange={handleChange} required className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
+                {/* Form Content */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+                    <div className="p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Section 1: Personal Details */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2 border-b border-teal-100 pb-2">
+                                    <User size={18} className="text-teal-600" />
+                                    <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Payer Identity</h3>
+                                </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-semibold text-gray-700">ID Photo</label>
-                            <div className="relative">
-                                <input type="file" onChange={(e) => handleFileChange(e, setIdPhoto)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                <div className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100">
-                                    <Upload size={16} />
-                                    <span className="text-xs truncate">{idPhoto ? idPhoto.name : 'Upload Photo'}</span>
+                                <div className="space-y-1.5 focus-within:transform focus-within:translate-x-1 transition-transform duration-200">
+                                    <label className="text-sm font-semibold text-slate-700">Full Name *</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            required
+                                            placeholder="Enter full name"
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white transition-all outline-none"
+                                        />
+                                        <User size={18} className="absolute left-4 top-3.5 text-slate-400" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-semibold text-slate-700">Phone *</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="Phone"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white transition-all outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-semibold text-slate-700">Email</label>
+                                        <div className="relative">
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                placeholder="Email"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white transition-all outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: Verification */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2 border-b border-teal-100 pb-2">
+                                    <ShieldCheck size={18} className="text-teal-600" />
+                                    <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Verification</h3>
+                                </div>
+
+                                <div className="space-y-1.5 focus-within:transform focus-within:translate-x-1 transition-transform duration-200">
+                                    <label className="text-sm font-semibold text-slate-700">ID / Passport Number *</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="idNumber"
+                                            value={formData.idNumber}
+                                            onChange={handleChange}
+                                            required
+                                            placeholder="NID or Passport #"
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white transition-all outline-none"
+                                        />
+                                        <FileText size={18} className="absolute left-4 top-3.5 text-slate-400" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-semibold text-slate-700 text-[11px] uppercase opacity-70">ID Photo</label>
+                                        <div className="relative">
+                                            <input type="file" onChange={(e) => handleFileChange(e, setIdPhoto)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                            <div className="flex items-center justify-center gap-2 px-3 py-3 border border-dashed border-slate-300 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
+                                                <Upload size={16} />
+                                                <span className="text-[10px] truncate max-w-[80px] font-bold">{idPhoto ? idPhoto.name : 'Upload'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-semibold text-slate-700 text-[11px] uppercase opacity-70">Work ID</label>
+                                        <div className="relative">
+                                            <input type="file" onChange={(e) => handleFileChange(e, setWorkIdPhoto)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                            <div className="flex items-center justify-center gap-2 px-3 py-3 border border-dashed border-slate-300 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
+                                                <Upload size={16} />
+                                                <span className="text-[10px] truncate max-w-[80px] font-bold">{workIdPhoto ? workIdPhoto.name : 'Upload'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-semibold text-gray-700">Work ID Photo</label>
-                            <div className="relative">
-                                <input type="file" onChange={(e) => handleFileChange(e, setWorkIdPhoto)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                <div className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100">
-                                    <Upload size={16} />
-                                    <span className="text-xs truncate">{workIdPhoto ? workIdPhoto.name : 'Upload Photo'}</span>
-                                </div>
+
+                        {/* Extra Info */}
+                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-1.5">
+                                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <Briefcase size={18} className="text-teal-600" />
+                                    Work Info & Notes
+                                </label>
+                                <textarea
+                                    name="workInfo"
+                                    value={formData.workInfo}
+                                    onChange={handleChange}
+                                    rows="2"
+                                    placeholder="Company name, role, income bracket..."
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white transition-all outline-none resize-none"
+                                ></textarea>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700">Account Status</label>
+                                <select
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white transition-all outline-none appearance-none"
+                                >
+                                    <option value="active">Active Verified</option>
+                                    <option value="inactive">Suspended / Inactive</option>
+                                </select>
                             </div>
                         </div>
                     </div>
 
-                    <div className="space-y-1">
-                        <label className="text-sm font-semibold text-gray-700">Work Information & Notes</label>
-                        <textarea name="workInfo" value={formData.workInfo} onChange={handleChange} rows="3" className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="text-sm font-semibold text-gray-700">Status</label>
-                        <select name="status" value={formData.status} onChange={handleChange} className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
+                    {/* Footer Actions */}
+                    <div className="sticky bottom-0 bg-white/80 backdrop-blur-md px-8 py-6 border-t border-slate-100 flex justify-end gap-4 z-20">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-8 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-all duration-200 active:scale-95 border border-slate-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="bg-teal-600 hover:bg-teal-700 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-teal-500/30 hover:shadow-teal-500/40 transition-all duration-200 active:scale-95 flex items-center gap-2"
+                        >
+                            <Plus size={20} />
+                            {guarantor ? 'Update Record' : 'Save Guarantor'}
+                        </button>
                     </div>
                 </form>
-
-                <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="px-6 py-2 text-gray-600 hover:bg-gray-200 rounded-xl font-bold transition-all">Cancel</button>
-                    <button type="submit" onClick={handleSubmit} className="px-8 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95">
-                        {guarantor ? 'Update' : 'Create'}
-                    </button>
-                </div>
             </div>
         </div>
     );

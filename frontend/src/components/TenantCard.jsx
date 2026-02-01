@@ -3,7 +3,7 @@ import { Phone, Mail, User } from 'lucide-react';
 
 const TenantCard = ({ tenant, onDelete, onEdit }) => {
   return (
-    <div className="card flex flex-col h-full">
+    <div className="card flex flex-col h-full bg-white shadow-lg p-6 rounded-xl">
       <div className="flex items-center gap-4 mb-4">
         <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
           <User size={24} />
@@ -25,20 +25,23 @@ const TenantCard = ({ tenant, onDelete, onEdit }) => {
           <Phone size={16} className="text-gray-400" />
           <span>{tenant.phone}</span>
         </div>
-        <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+        <div className="mt-2 p-2 bg-slate-100 rounded text-sm border border-slate-200">
           <span className="text-gray-500">Unit: </span>
           <span className="font-medium">{tenant.unit?.unitNumber || 'Not Assigned'}</span>
+          {tenant.unit?.property?.name && (
+            <span className="text-gray-500"> ({tenant.unit.property.name})</span>
+          )}
         </div>
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end gap-3">
-        <button 
+        <button
           onClick={() => onEdit(tenant)}
           className="text-sm text-gray-600 hover:text-blue-600"
         >
           Edit
         </button>
-        <button 
+        <button
           onClick={() => onDelete(tenant._id)}
           className="text-sm text-red-500 hover:text-red-700"
         >

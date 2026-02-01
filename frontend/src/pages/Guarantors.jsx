@@ -48,7 +48,9 @@ const Guarantors = () => {
             await axios.delete(`/guarantors/${id}`);
             setGuarantors(guarantors.filter(g => g._id !== id));
         } catch (error) {
-            alert('Failed to delete guarantor');
+            console.error('Error deleting guarantor', error);
+            const errorMessage = error.response?.data?.message || 'Failed to delete guarantor';
+            alert(errorMessage);
         }
     };
 
