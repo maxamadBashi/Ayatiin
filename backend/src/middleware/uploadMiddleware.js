@@ -1,5 +1,21 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../../uploads/');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination(req, file, cb) {
+        cb(null, uploadsDir);
+    },
+    filename(req, file, cb) {
+        cb(null, `images-${Date.now()}${path.extname(file.originalname)}`);
+    },
+});
 
 function checkFileType(file, cb) {
     const filetypes = /jpg|jpeg|png|gif|webp/;
@@ -12,9 +28,6 @@ function checkFileType(file, cb) {
         cb(new Error('Images only! Please upload jpg, jpeg, png, gif, or webp files.'));
     }
 }
-
-// Use memory storage in production-friendly flow. Files are uploaded to Cloudinary from buffers.
-const storage = multer.memoryStorage();
 
 const upload = multer({
     storage,

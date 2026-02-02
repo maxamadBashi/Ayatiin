@@ -21,14 +21,8 @@ services:
     name: ayatiin-backend
     env: node
     rootDir: backend
-    buildCommand: npm install && npx prisma generate
+    buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: CLOUDINARY_CLOUD_NAME
-        value: "" # set in Render dashboard
-      - key: CLOUDINARY_API_KEY
-        value: "" # set in Render dashboard
-      - key: CLOUDINARY_API_SECRET
-        value: "" # set in Render dashboard
-      - key: DATABASE_URL
-        value: "" # set your production database URL in Render
+      - key: PORT
+        value: 10000

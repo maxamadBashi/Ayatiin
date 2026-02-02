@@ -1,7 +1,4 @@
 const { prisma } = require('../config/db');
-const path = require('path');
-const fs = require('fs');
-const { uploadBuffer, isConfigured } = require('../config/cloudinary');
 
 // @desc    Get all guarantors
 // @route   GET /api/guarantors
@@ -56,62 +53,22 @@ const getGuarantor = async (req, res) => {
 const createGuarantor = async (req, res) => {
     try {
         const { _id, id, ...data } = req.body;
-        // Upload id/work photos to Cloudinary if provided; fallback to local disk
-        let idPhotoUrl = data.idPhoto;
-        let workIdPhotoUrl = data.workIdPhoto;
-        try {
-            if (req.files && req.files.idPhoto && req.files.idPhoto[0] && req.files.idPhoto[0].buffer) {
-                if (isConfigured) {
-                    const r = await uploadBuffer(req.files.idPhoto[0].buffer, 'guarantors');
-                    idPhotoUrl = r.secure_url || r.url;
-                } else {
-                    const uploadsDir = path.join(__dirname, '../../uploads');
-                    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-                    const ext = path.extname(req.files.idPhoto[0].originalname) || '.jpg';
-                    const filename = `idPhoto-${Date.now()}-${Math.round(Math.random()*1e9)}${ext}`;
-                    fs.writeFileSync(path.join(uploadsDir, filename), req.files.idPhoto[0].buffer);
-                    idPhotoUrl = `/uploads/${filename}`;
-                }
-            }
-            if (req.files && req.files.workIdPhoto && req.files.workIdPhoto[0] && req.files.workIdPhoto[0].buffer) {
-                if (isConfigured) {
-                    const r2 = await uploadBuffer(req.files.workIdPhoto[0].buffer, 'guarantors');
-                    workIdPhotoUrl = r2.secure_url || r2.url;
-                } else {
-                    const uploadsDir = path.join(__dirname, '../../uploads');
-                    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-                    const ext2 = path.extname(req.files.workIdPhoto[0].originalname) || '.jpg';
-                    const filename2 = `workId-${Date.now()}-${Math.round(Math.random()*1e9)}${ext2}`;
-                    fs.writeFileSync(path.join(uploadsDir, filename2), req.files.workIdPhoto[0].buffer);
-                    workIdPhotoUrl = `/uploads/${filename2}`;
-                }
-            }
-        } catch (uploadErr) {
-            console.error('Cloudinary/local upload error (guarantor):', uploadErr);
-            return res.status(500).json({ message: 'Image upload failed' });
-        }
-
         const guarantor = await prisma.guarantor.create({
             data: {
                 ...data,
-                idPhoto: idPhotoUrl,
-                workIdPhoto: workIdPhotoUrl,
+                // Handle potential file paths from multer fields
+                idPhoto: req.files && req.files.idPhoto ? `/uploads/${req.files.idPhoto[0].filename}` : data.idPhoto,
+                workIdPhoto: req.files && req.files.workIdPhoto ? `/uploads/${req.files.workIdPhoto[0].filename}` : data.workIdPhoto,
             }
         });
-        // Audit Log (safe)
-        if (req.user && req.user.id) {
-            try {
-                await prisma.auditLog.create({
-                    data: {
-                        userId: req.user.id,
-                        action: 'CREATE_GUARANTOR',
-                        details: `Created guarantor: ${guarantor.name} (${guarantor.id})`
-                    }
-                });
-            } catch (alErr) {
-                console.warn('AuditLog create failed:', alErr.message);
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'CREATE_GUARANTOR',
+                details: `Created guarantor: ${guarantor.name} (${guarantor.id})`
             }
-        }
+        });
 
         res.status(201).json({ ...guarantor, _id: guarantor.id });
     } catch (error) {
@@ -125,64 +82,23 @@ const createGuarantor = async (req, res) => {
 const updateGuarantor = async (req, res) => {
     try {
         const { _id, id, ...data } = req.body;
-        // Upload id/work photos to Cloudinary if provided; fallback to local disk
-        let idPhotoUrl = data.idPhoto;
-        let workIdPhotoUrl = data.workIdPhoto;
-        try {
-            if (req.files && req.files.idPhoto && req.files.idPhoto[0] && req.files.idPhoto[0].buffer) {
-                if (isConfigured) {
-                    const r = await uploadBuffer(req.files.idPhoto[0].buffer, 'guarantors');
-                    idPhotoUrl = r.secure_url || r.url;
-                } else {
-                    const uploadsDir = path.join(__dirname, '../../uploads');
-                    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-                    const ext = path.extname(req.files.idPhoto[0].originalname) || '.jpg';
-                    const filename = `idPhoto-${Date.now()}-${Math.round(Math.random()*1e9)}${ext}`;
-                    fs.writeFileSync(path.join(uploadsDir, filename), req.files.idPhoto[0].buffer);
-                    idPhotoUrl = `/uploads/${filename}`;
-                }
-            }
-            if (req.files && req.files.workIdPhoto && req.files.workIdPhoto[0] && req.files.workIdPhoto[0].buffer) {
-                if (isConfigured) {
-                    const r2 = await uploadBuffer(req.files.workIdPhoto[0].buffer, 'guarantors');
-                    workIdPhotoUrl = r2.secure_url || r2.url;
-                } else {
-                    const uploadsDir = path.join(__dirname, '../../uploads');
-                    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-                    const ext2 = path.extname(req.files.workIdPhoto[0].originalname) || '.jpg';
-                    const filename2 = `workId-${Date.now()}-${Math.round(Math.random()*1e9)}${ext2}`;
-                    fs.writeFileSync(path.join(uploadsDir, filename2), req.files.workIdPhoto[0].buffer);
-                    workIdPhotoUrl = `/uploads/${filename2}`;
-                }
-            }
-        } catch (uploadErr) {
-            console.error('Cloudinary/local upload error (guarantor):', uploadErr);
-            return res.status(500).json({ message: 'Image upload failed' });
-        }
-
         const guarantor = await prisma.guarantor.update({
             where: { id: req.params.id },
             data: {
                 ...data,
-                idPhoto: idPhotoUrl,
-                workIdPhoto: workIdPhotoUrl,
+                idPhoto: req.files && req.files.idPhoto ? `/uploads/${req.files.idPhoto[0].filename}` : data.idPhoto,
+                workIdPhoto: req.files && req.files.workIdPhoto ? `/uploads/${req.files.workIdPhoto[0].filename}` : data.workIdPhoto,
             }
         });
 
-        // Audit Log (safe)
-        if (req.user && req.user.id) {
-            try {
-                await prisma.auditLog.create({
-                    data: {
-                        userId: req.user.id,
-                        action: 'UPDATE_GUARANTOR',
-                        details: `Updated guarantor: ${guarantor.name} (${guarantor.id})`
-                    }
-                });
-            } catch (alErr) {
-                console.warn('AuditLog create failed:', alErr.message);
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'UPDATE_GUARANTOR',
+                details: `Updated guarantor: ${guarantor.name} (${guarantor.id})`
             }
-        }
+        });
 
         res.json({ ...guarantor, _id: guarantor.id });
     } catch (error) {
@@ -200,20 +116,14 @@ const deleteGuarantor = async (req, res) => {
 
         await prisma.guarantor.delete({ where: { id: req.params.id } });
 
-        // Audit Log (safe)
-        if (req.user && req.user.id) {
-            try {
-                await prisma.auditLog.create({
-                    data: {
-                        userId: req.user.id,
-                        action: 'DELETE_GUARANTOR',
-                        details: `Deleted guarantor: ${guarantor.name} (${guarantor.id})`
-                    }
-                });
-            } catch (alErr) {
-                console.warn('AuditLog create failed:', alErr.message);
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'DELETE_GUARANTOR',
+                details: `Deleted guarantor: ${guarantor.name} (${guarantor.id})`
             }
-        }
+        });
 
         res.json({ message: 'Guarantor removed' });
     } catch (error) {

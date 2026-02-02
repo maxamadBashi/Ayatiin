@@ -1,7 +1,4 @@
 const { prisma } = require('../config/db');
-const path = require('path');
-const fs = require('fs');
-const { uploadBuffer, isConfigured } = require('../config/cloudinary');
 
 // @desc    Get all properties
 // @route   GET /api/properties
@@ -78,37 +75,10 @@ const createProperty = async (req, res) => {
             });
         }
 
-        // Handle image uploads -> upload to Cloudinary and store secure URLs
-        // Fallback: if Cloudinary not configured, write files to local /uploads directory
+        // Handle image uploads
         let images = [];
         if (req.files && req.files.length > 0) {
-            if (isConfigured) {
-                try {
-                    const uploadPromises = req.files.map(async (file) => {
-                        const res = await uploadBuffer(file.buffer, 'properties');
-                        return res.secure_url || res.url;
-                    });
-                    images = await Promise.all(uploadPromises);
-                } catch (uploadError) {
-                    console.error('Cloudinary upload error:', uploadError);
-                    return res.status(500).json({ message: 'Image upload failed' });
-                }
-            } else {
-                try {
-                    const uploadsDir = path.join(__dirname, '../../uploads');
-                    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-                    images = req.files.map((file) => {
-                        const ext = path.extname(file.originalname) || '.jpg';
-                        const filename = `images-${Date.now()}-${Math.round(Math.random()*1e9)}${ext}`;
-                        const filepath = path.join(uploadsDir, filename);
-                        fs.writeFileSync(filepath, file.buffer);
-                        return `/uploads/${filename}`;
-                    });
-                } catch (fsErr) {
-                    console.error('Local file write error:', fsErr);
-                    return res.status(500).json({ message: 'Image saving failed' });
-                }
-            }
+            images = req.files.map(file => `/uploads/${file.filename}`);
         }
 
         const property = await prisma.property.create({
@@ -125,20 +95,14 @@ const createProperty = async (req, res) => {
             },
         });
 
-        // Audit Log (safe)
-        if (req.user && req.user.id) {
-            try {
-                await prisma.auditLog.create({
-                    data: {
-                        userId: req.user.id,
-                        action: 'CREATE_PROPERTY',
-                        details: `Created property: ${property.name} (${property.id})`
-                    }
-                });
-            } catch (alErr) {
-                console.warn('AuditLog create failed:', alErr.message);
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'CREATE_PROPERTY',
+                details: `Created property: ${property.name} (${property.id})`
             }
-        }
+        });
 
         res.status(201).json({ ...property, _id: property.id });
     } catch (error) {
@@ -156,37 +120,10 @@ const updateProperty = async (req, res) => {
     try {
         const { name, type, address, city, ownerName, description, status, location } = req.body;
 
-        // Handle image uploads -> upload to Cloudinary and store secure URLs
-        // Fallback to local disk when Cloudinary isn't configured
+        // Handle image uploads
         let newImages = [];
         if (req.files && req.files.length > 0) {
-            if (isConfigured) {
-                try {
-                    const uploadPromises = req.files.map(async (file) => {
-                        const res = await uploadBuffer(file.buffer, 'properties');
-                        return res.secure_url || res.url;
-                    });
-                    newImages = await Promise.all(uploadPromises);
-                } catch (uploadError) {
-                    console.error('Cloudinary upload error:', uploadError);
-                    return res.status(500).json({ message: 'Image upload failed' });
-                }
-            } else {
-                try {
-                    const uploadsDir = path.join(__dirname, '../../uploads');
-                    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-                    newImages = req.files.map((file) => {
-                        const ext = path.extname(file.originalname) || '.jpg';
-                        const filename = `images-${Date.now()}-${Math.round(Math.random()*1e9)}${ext}`;
-                        const filepath = path.join(uploadsDir, filename);
-                        fs.writeFileSync(filepath, file.buffer);
-                        return `/uploads/${filename}`;
-                    });
-                } catch (fsErr) {
-                    console.error('Local file write error:', fsErr);
-                    return res.status(500).json({ message: 'Image saving failed' });
-                }
-            }
+            newImages = req.files.map(file => `/uploads/${file.filename}`);
         }
 
         const property = await prisma.property.findUnique({ where: { id: req.params.id } });
@@ -228,20 +165,14 @@ const updateProperty = async (req, res) => {
             data: updateData,
         });
 
-        // Audit Log (safe)
-        if (req.user && req.user.id) {
-            try {
-                await prisma.auditLog.create({
-                    data: {
-                        userId: req.user.id,
-                        action: 'UPDATE_PROPERTY',
-                        details: `Updated property: ${updatedProperty.name} (${updatedProperty.id})`
-                    }
-                });
-            } catch (alErr) {
-                console.warn('AuditLog create failed:', alErr.message);
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.id,
+                action: 'UPDATE_PROPERTY',
+                details: `Updated property: ${updatedProperty.name} (${updatedProperty.id})`
             }
-        }
+        });
 
         res.json({ ...updatedProperty, _id: updatedProperty.id });
     } catch (error) {
@@ -270,20 +201,14 @@ const deleteProperty = async (req, res) => {
 
             await prisma.property.delete({ where: { id: req.params.id } });
 
-            // Audit Log (safe)
-            if (req.user && req.user.id) {
-                try {
-                    await prisma.auditLog.create({
-                        data: {
-                            userId: req.user.id,
-                            action: 'DELETE_PROPERTY',
-                            details: `Deleted property: ${property.name} (${property.id})`
-                        }
-                    });
-                } catch (alErr) {
-                    console.warn('AuditLog create failed:', alErr.message);
+            // Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    userId: req.user.id,
+                    action: 'DELETE_PROPERTY',
+                    details: `Deleted property: ${property.name} (${property.id})`
                 }
-            }
+            });
 
             res.json({ message: 'Property removed' });
         } else {
