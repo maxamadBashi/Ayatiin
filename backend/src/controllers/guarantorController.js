@@ -98,14 +98,20 @@ const createGuarantor = async (req, res) => {
                 workIdPhoto: workIdPhotoUrl,
             }
         });
-        // Audit Log
-        await prisma.auditLog.create({
-            data: {
-                userId: req.user.id,
-                action: 'CREATE_GUARANTOR',
-                details: `Created guarantor: ${guarantor.name} (${guarantor.id})`
+        // Audit Log (safe)
+        if (req.user && req.user.id) {
+            try {
+                await prisma.auditLog.create({
+                    data: {
+                        userId: req.user.id,
+                        action: 'CREATE_GUARANTOR',
+                        details: `Created guarantor: ${guarantor.name} (${guarantor.id})`
+                    }
+                });
+            } catch (alErr) {
+                console.warn('AuditLog create failed:', alErr.message);
             }
-        });
+        }
 
         res.status(201).json({ ...guarantor, _id: guarantor.id });
     } catch (error) {
@@ -163,14 +169,20 @@ const updateGuarantor = async (req, res) => {
             }
         });
 
-        // Audit Log
-        await prisma.auditLog.create({
-            data: {
-                userId: req.user.id,
-                action: 'UPDATE_GUARANTOR',
-                details: `Updated guarantor: ${guarantor.name} (${guarantor.id})`
+        // Audit Log (safe)
+        if (req.user && req.user.id) {
+            try {
+                await prisma.auditLog.create({
+                    data: {
+                        userId: req.user.id,
+                        action: 'UPDATE_GUARANTOR',
+                        details: `Updated guarantor: ${guarantor.name} (${guarantor.id})`
+                    }
+                });
+            } catch (alErr) {
+                console.warn('AuditLog create failed:', alErr.message);
             }
-        });
+        }
 
         res.json({ ...guarantor, _id: guarantor.id });
     } catch (error) {
@@ -188,14 +200,20 @@ const deleteGuarantor = async (req, res) => {
 
         await prisma.guarantor.delete({ where: { id: req.params.id } });
 
-        // Audit Log
-        await prisma.auditLog.create({
-            data: {
-                userId: req.user.id,
-                action: 'DELETE_GUARANTOR',
-                details: `Deleted guarantor: ${guarantor.name} (${guarantor.id})`
+        // Audit Log (safe)
+        if (req.user && req.user.id) {
+            try {
+                await prisma.auditLog.create({
+                    data: {
+                        userId: req.user.id,
+                        action: 'DELETE_GUARANTOR',
+                        details: `Deleted guarantor: ${guarantor.name} (${guarantor.id})`
+                    }
+                });
+            } catch (alErr) {
+                console.warn('AuditLog create failed:', alErr.message);
             }
-        });
+        }
 
         res.json({ message: 'Guarantor removed' });
     } catch (error) {

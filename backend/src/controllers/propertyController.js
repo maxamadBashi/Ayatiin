@@ -125,14 +125,20 @@ const createProperty = async (req, res) => {
             },
         });
 
-        // Audit Log
-        await prisma.auditLog.create({
-            data: {
-                userId: req.user.id,
-                action: 'CREATE_PROPERTY',
-                details: `Created property: ${property.name} (${property.id})`
+        // Audit Log (safe)
+        if (req.user && req.user.id) {
+            try {
+                await prisma.auditLog.create({
+                    data: {
+                        userId: req.user.id,
+                        action: 'CREATE_PROPERTY',
+                        details: `Created property: ${property.name} (${property.id})`
+                    }
+                });
+            } catch (alErr) {
+                console.warn('AuditLog create failed:', alErr.message);
             }
-        });
+        }
 
         res.status(201).json({ ...property, _id: property.id });
     } catch (error) {
@@ -222,14 +228,20 @@ const updateProperty = async (req, res) => {
             data: updateData,
         });
 
-        // Audit Log
-        await prisma.auditLog.create({
-            data: {
-                userId: req.user.id,
-                action: 'UPDATE_PROPERTY',
-                details: `Updated property: ${updatedProperty.name} (${updatedProperty.id})`
+        // Audit Log (safe)
+        if (req.user && req.user.id) {
+            try {
+                await prisma.auditLog.create({
+                    data: {
+                        userId: req.user.id,
+                        action: 'UPDATE_PROPERTY',
+                        details: `Updated property: ${updatedProperty.name} (${updatedProperty.id})`
+                    }
+                });
+            } catch (alErr) {
+                console.warn('AuditLog create failed:', alErr.message);
             }
-        });
+        }
 
         res.json({ ...updatedProperty, _id: updatedProperty.id });
     } catch (error) {
@@ -258,14 +270,20 @@ const deleteProperty = async (req, res) => {
 
             await prisma.property.delete({ where: { id: req.params.id } });
 
-            // Audit Log
-            await prisma.auditLog.create({
-                data: {
-                    userId: req.user.id,
-                    action: 'DELETE_PROPERTY',
-                    details: `Deleted property: ${property.name} (${property.id})`
+            // Audit Log (safe)
+            if (req.user && req.user.id) {
+                try {
+                    await prisma.auditLog.create({
+                        data: {
+                            userId: req.user.id,
+                            action: 'DELETE_PROPERTY',
+                            details: `Deleted property: ${property.name} (${property.id})`
+                        }
+                    });
+                } catch (alErr) {
+                    console.warn('AuditLog create failed:', alErr.message);
                 }
-            });
+            }
 
             res.json({ message: 'Property removed' });
         } else {

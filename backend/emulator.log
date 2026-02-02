@@ -10629,3 +10629,13 @@
 [2026-02-02T11:04:43.700Z] QUERY: INSERT INTO "AuditLog" ("user_id", "action", "details") VALUES ($1, $2, $3) RETURNING * | PARAMS: ["c7db0eb6-5346-4c86-b40d-aa0a112e2dbc","DELETE_PROPERTY","Deleted property: OLOW TOWER (0a7684be-1e47-4cc4-b757-b82b2711a348)"]
 [2026-02-02T11:04:46.283Z] QUERY: SELECT * FROM "Property" | PARAMS: []
 [2026-02-02T11:04:46.490Z] QUERY: SELECT * FROM "Property" | PARAMS: []
+[2026-02-02T11:09:14.242Z] QUERY: SELECT * FROM "Property" | PARAMS: []
+[2026-02-02T11:09:14.452Z] QUERY: SELECT * FROM "Property" | PARAMS: []
+[2026-02-02T11:10:39.418Z] QUERY: SELECT * FROM "Property" | PARAMS: []
+[2026-02-02T11:10:39.617Z] QUERY: SELECT * FROM "Property" | PARAMS: []
+[2026-02-02T11:13:11.677Z] QUERY: INSERT INTO "Property" ("name", "type", "address", "city", "owner_name", "location", "description", "status", "images") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING * | PARAMS: ["Test Property From Script","Apartment","","TestCity","","","","available",["/uploads/images-1770030790401-56349012.jpg"]]
+[2026-02-02T11:13:11.888Z] QUERY: INSERT INTO "AuditLog" ("user_id", "action", "details") VALUES ($1, $2, $3) RETURNING * | PARAMS: ["00000000-0000-0000-0000-000000000000","CREATE_PROPERTY","Created property: Test Property From Script (e8ad2592-590f-4f68-922a-d8c13a28a49e)"]
+[ERROR] insert or update on table "AuditLog" violates foreign key constraint "AuditLog_user_id_fkey"
+[2026-02-02T11:15:01.156Z] QUERY: INSERT INTO "Property" ("name", "type", "address", "city", "owner_name", "location", "description", "status", "images") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING * | PARAMS: ["Test Property From Script","Apartment","","TestCity","","","","available",["/uploads/images-1770030899633-281605999.jpg"]]
+[2026-02-02T11:15:01.366Z] QUERY: INSERT INTO "AuditLog" ("user_id", "action", "details") VALUES ($1, $2, $3) RETURNING * | PARAMS: ["00000000-0000-0000-0000-000000000000","CREATE_PROPERTY","Created property: Test Property From Script (fd1348cb-a9eb-455b-b55c-5df49bc377fa)"]
+[ERROR] insert or update on table "AuditLog" violates foreign key constraint "AuditLog_user_id_fkey"
