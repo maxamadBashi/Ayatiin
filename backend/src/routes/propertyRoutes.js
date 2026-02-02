@@ -9,7 +9,7 @@ const {
     deleteProperty,
 } = require('../controllers/propertyController');
 const { protect, authorize } = require('../middleware/auth');
-const upload = require('../middleware/uploadMiddleware');
+const uploadToCloudinary = require('../middleware/cloudinaryUpload');
 
 // Multer error handler middleware
 const handleMulterError = (err, req, res, next) => {
@@ -30,7 +30,7 @@ const handleMulterError = (err, req, res, next) => {
 
 // Wrapper to handle multer errors
 const uploadMiddleware = (req, res, next) => {
-    upload.array('images', 10)(req, res, (err) => {
+    uploadToCloudinary(req, res, (err) => {
         if (err) {
             return handleMulterError(err, req, res, next);
         }

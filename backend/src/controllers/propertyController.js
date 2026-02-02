@@ -75,9 +75,11 @@ const createProperty = async (req, res) => {
             });
         }
 
-        // Handle image uploads
+        // Handle image uploads (Cloudinary or fallback local)
         let images = [];
-        if (req.files && req.files.length > 0) {
+        if (req.uploadedImages && req.uploadedImages.length > 0) {
+            images = req.uploadedImages;
+        } else if (req.files && req.files.length > 0) {
             images = req.files.map(file => `/uploads/${file.filename}`);
         }
 
@@ -120,9 +122,11 @@ const updateProperty = async (req, res) => {
     try {
         const { name, type, address, city, ownerName, description, status, location } = req.body;
 
-        // Handle image uploads
+        // Handle image uploads (Cloudinary or fallback local)
         let newImages = [];
-        if (req.files && req.files.length > 0) {
+        if (req.uploadedImages && req.uploadedImages.length > 0) {
+            newImages = req.uploadedImages;
+        } else if (req.files && req.files.length > 0) {
             newImages = req.files.map(file => `/uploads/${file.filename}`);
         }
 
