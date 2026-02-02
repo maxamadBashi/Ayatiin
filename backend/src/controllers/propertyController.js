@@ -1,5 +1,16 @@
 const { prisma } = require('../config/db');
 
+function makeAbsoluteImageUrls(images = [], req) {
+    const base = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
+    return images.map(img => {
+        if (!img) return img;
+        if (typeof img !== 'string') return img;
+        if (img.startsWith('http')) return img;
+        if (img.startsWith('/')) return `${base}${img}`;
+        return `${base}/${img}`;
+    });
+}
+
 // @desc    Get all properties
 // @route   GET /api/properties
 // @access  Private
@@ -10,8 +21,12 @@ const getProperties = async (req, res) => {
                 units: true
             }
         });
-        // Map id to _id for frontend compatibility
-        const mappedProperties = properties.map(p => ({ ...p, _id: p.id }));
+        // Map id to _id for frontend compatibility and make image URLs absolute
+        const mappedProperties = properties.map(p => ({
+            ...p,
+            _id: p.id,
+            images: makeAbsoluteImageUrls(p.images || [], req),
+        }));
         res.json(mappedProperties);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -30,7 +45,7 @@ const getPropertyById = async (req, res) => {
             }
         });
         if (property) {
-            res.json({ ...property, _id: property.id });
+            res.json({ ...property, _id: property.id, images: makeAbsoluteImageUrls(property.images || [], req) });
         } else {
             res.status(404).json({ message: 'Property not found' });
         }
@@ -106,7 +121,7 @@ const createProperty = async (req, res) => {
             }
         });
 
-        res.status(201).json({ ...property, _id: property.id });
+        res.status(201).json({ ...property, _id: property.id, images: makeAbsoluteImageUrls(property.images || [], req) });
     } catch (error) {
         console.error('Error creating property:', error);
         res.status(500).json({
@@ -178,7 +193,7 @@ const updateProperty = async (req, res) => {
             }
         });
 
-        res.json({ ...updatedProperty, _id: updatedProperty.id });
+        res.json({ ...updatedProperty, _id: updatedProperty.id, images: makeAbsoluteImageUrls(updatedProperty.images || [], req) });
     } catch (error) {
         console.error('Error updating property:', error);
         res.status(500).json({
