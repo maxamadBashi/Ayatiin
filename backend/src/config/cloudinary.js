@@ -1,13 +1,4 @@
 const cloudinary = require('cloudinary').v2;
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-module.exports = cloudinary;
-const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
 cloudinary.config({
@@ -17,7 +8,7 @@ cloudinary.config({
   secure: true,
 });
 
-function uploadBuffer(buffer, folder = 'ayatiin') {
+function uploadBuffer(buffer, folder = 'ayatiin/properties') {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream({ folder }, (error, result) => {
       if (error) return reject(error);
@@ -27,7 +18,5 @@ function uploadBuffer(buffer, folder = 'ayatiin') {
   });
 }
 
-module.exports = {
-  cloudinary,
-  uploadBuffer,
-};
+module.exports = cloudinary;
+module.exports.uploadBuffer = uploadBuffer;
