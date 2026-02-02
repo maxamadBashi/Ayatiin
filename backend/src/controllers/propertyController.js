@@ -1,11 +1,26 @@
 const { prisma } = require('../config/db');
 
 function makeAbsoluteImageUrls(images = [], req) {
-    const base = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
-    return images.map(img => {
-        if (!img) return img;
-        if (typeof img !== 'string') return img;
-        if (img.startsWith('http')) return img;
+    const base = (process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    return images.map(raw => {
+        if (!raw) return raw;
+        if (typeof raw !== 'string') return raw;
+        const img = raw.trim();
+        // Already absolute (http/https)
+        if (/^https?:\/\//i.test(img)) return img;
+        // Protocol-relative //example.com/image.jpg
+        if (/^\/\//.test(img)) return `${req.protocol}:${img}`;
+        // Already contains host (e.g., starts with backend URL)
+        try {
+            const parsed = new URL(img, base);
+            // If img included a protocol or hostname, return as-is (URL resolved)
+            if (parsed.protocol && parsed.hostname && !img.startsWith('/')) {
+                return parsed.href;
+            }
+        } catch (e) {
+            // ignore and continue to prefix
+        }
+        // Relative path: prefix with base
         if (img.startsWith('/')) return `${base}${img}`;
         return `${base}/${img}`;
     });
