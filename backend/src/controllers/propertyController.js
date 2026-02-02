@@ -6,15 +6,17 @@ function makeAbsoluteImageUrls(images = [], req) {
         if (!raw) return raw;
         if (typeof raw !== 'string') return raw;
         const img = raw.trim();
+        // remove accidental leading slashes before a protocol, e.g. '/http://...'
+        const imgClean = img.replace(/^\/+/, '');
         // Already absolute (http/https)
-        if (/^https?:\/\//i.test(img)) return img;
+        if (/^https?:\/\//i.test(imgClean)) return imgClean;
         // Protocol-relative //example.com/image.jpg
         if (/^\/\//.test(img)) return `${req.protocol}:${img}`;
         // Already contains host (e.g., starts with backend URL)
         try {
-            const parsed = new URL(img, base);
-            // If img included a protocol or hostname, return as-is (URL resolved)
-            if (parsed.protocol && parsed.hostname && !img.startsWith('/')) {
+            const parsed = new URL(imgClean, base);
+            // If imgClean included a protocol or hostname, return as-is (URL resolved)
+            if (parsed.protocol && parsed.hostname && !imgClean.startsWith('/')) {
                 return parsed.href;
             }
         } catch (e) {
