@@ -17,6 +17,7 @@ const expenseRoutes = require('./routes/expenseRoutes');
 const guarantorRoutes = require('./routes/guarantorRoutes');
 
 const path = require('path');
+const fs = require('fs');
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -50,6 +51,21 @@ app.use(express.json());
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Serve frontend static files when a build is available
+const frontendDist = path.join(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+
+    // SPA fallback: return index.html for non-API routes
+    app.get('*', (req, res, next) => {
+        // keep API and uploads routes working
+        if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+        const indexPath = path.join(frontendDist, 'index.html');
+        if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+        next();
+    });
+}
 
 // Mount routers
 app.use('/api/auth', authRoutes);
