@@ -8,7 +8,7 @@ cloudinary.config({
   secure: true,
 });
 
-function uploadBuffer(buffer, folder = 'ayatiin/properties') {
+function uploadBuffer(buffer, folder = 'ayatiin') {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream({ folder }, (error, result) => {
       if (error) return reject(error);
@@ -18,5 +18,7 @@ function uploadBuffer(buffer, folder = 'ayatiin/properties') {
   });
 }
 
-module.exports = cloudinary;
-module.exports.uploadBuffer = uploadBuffer;
+module.exports = {
+  cloudinary,
+  uploadBuffer,
+};
