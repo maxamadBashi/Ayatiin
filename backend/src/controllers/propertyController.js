@@ -75,10 +75,11 @@ const createProperty = async (req, res) => {
             });
         }
 
-        // Handle image uploads
+        // Handle image uploads (Cloudinary URLs)
         let images = [];
         if (req.files && req.files.length > 0) {
-            images = req.files.map(file => `/uploads/${file.filename}`);
+            // multer-storage-cloudinary exposes the hosted URL at file.path
+            images = req.files.map(file => file.path);
         }
 
         const property = await prisma.property.create({
@@ -120,10 +121,10 @@ const updateProperty = async (req, res) => {
     try {
         const { name, type, address, city, ownerName, description, status, location } = req.body;
 
-        // Handle image uploads
+        // Handle image uploads (Cloudinary URLs)
         let newImages = [];
         if (req.files && req.files.length > 0) {
-            newImages = req.files.map(file => `/uploads/${file.filename}`);
+            newImages = req.files.map(file => file.path);
         }
 
         const property = await prisma.property.findUnique({ where: { id: req.params.id } });

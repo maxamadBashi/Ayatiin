@@ -17,7 +17,9 @@ const PublicPropertyCard = ({ property, onBook, onBuy }) => {
             <div className="relative h-64 overflow-hidden">
                 <img
                     src={property.images && property.images.length > 0
-                        ? `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}${property.images[0].startsWith('/') ? '' : '/'}${property.images[0]}`
+                        ? (property.images[0].startsWith('http')
+                            ? property.images[0]
+                            : `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}${property.images[0].startsWith('/') ? '' : '/'}${property.images[0]}`)
                         : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={property.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"

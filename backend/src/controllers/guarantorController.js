@@ -56,9 +56,9 @@ const createGuarantor = async (req, res) => {
         const guarantor = await prisma.guarantor.create({
             data: {
                 ...data,
-                // Handle potential file paths from multer fields
-                idPhoto: req.files && req.files.idPhoto ? `/uploads/${req.files.idPhoto[0].filename}` : data.idPhoto,
-                workIdPhoto: req.files && req.files.workIdPhoto ? `/uploads/${req.files.workIdPhoto[0].filename}` : data.workIdPhoto,
+                // Handle potential file paths from multer fields (Cloudinary URLs)
+                idPhoto: req.files && req.files.idPhoto ? req.files.idPhoto[0].path : data.idPhoto,
+                workIdPhoto: req.files && req.files.workIdPhoto ? req.files.workIdPhoto[0].path : data.workIdPhoto,
             }
         });
         // Audit Log
@@ -86,8 +86,8 @@ const updateGuarantor = async (req, res) => {
             where: { id: req.params.id },
             data: {
                 ...data,
-                idPhoto: req.files && req.files.idPhoto ? `/uploads/${req.files.idPhoto[0].filename}` : data.idPhoto,
-                workIdPhoto: req.files && req.files.workIdPhoto ? `/uploads/${req.files.workIdPhoto[0].filename}` : data.workIdPhoto,
+                idPhoto: req.files && req.files.idPhoto ? req.files.idPhoto[0].path : data.idPhoto,
+                workIdPhoto: req.files && req.files.workIdPhoto ? req.files.workIdPhoto[0].path : data.workIdPhoto,
             }
         });
 

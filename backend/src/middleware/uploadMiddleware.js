@@ -1,28 +1,28 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../../uploads/');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, uploadsDir);
-    },
-    filename(req, file, cb) {
-        cb(null, `images-${Date.now()}${path.extname(file.originalname)}`);
+// Configure Cloudinary storage for all uploaded images
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: async (req, file) => {
+        return {
+            folder: 'ayatiin/properties', // folder name in Cloudinary
+            resource_type: 'image',
+            format: undefined, // keep original format
+            public_id: undefined, // let Cloudinary generate
+            transformation: [
+                { width: 1600, height: 900, crop: 'limit', quality: 'auto' },
+            ],
+        };
     },
 });
 
 function checkFileType(file, cb) {
     const filetypes = /jpg|jpeg|png|gif|webp/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
 
-    if (extname && mimetype) {
+    if (mimetype) {
         return cb(null, true);
     } else {
         cb(new Error('Images only! Please upload jpg, jpeg, png, gif, or webp files.'));
