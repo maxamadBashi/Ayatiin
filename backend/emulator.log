@@ -11770,3 +11770,8 @@
 [2026-02-03T11:08:50.389Z] QUERY: SELECT * FROM "Expense" | PARAMS: []
 [2026-02-03T11:09:11.261Z] QUERY: SELECT * FROM "Property" | PARAMS: []
 [2026-02-03T11:09:11.589Z] QUERY: SELECT * FROM "Property" | PARAMS: []
+[2026-02-03T11:34:33.987Z] QUERY: SELECT * FROM "Property" | PARAMS: []
+[2026-02-03T11:34:34.210Z] QUERY: SELECT * FROM "Property" | PARAMS: []
+[2026-02-03T11:34:55.345Z] QUERY: SELECT * FROM "User" WHERE "id" = $1 LIMIT 1 | PARAMS: ["c7db0eb6-5346-4c86-b40d-aa0a112e2dbc"]
+[2026-02-03T11:34:55.608Z] QUERY: INSERT INTO "Property" ("name", "type", "address", "city", "owner_name", "location", "description", "status", "images") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING * | PARAMS: ["OLOW TOWER","Apartment","HODAN , DABKA","Mogadishu","ABDIRIZAQ","HODAN , DABKA","","available",["/uploads/images-1770118495598-685557580.jpg"]]
+[2026-02-03T11:34:55.880Z] QUERY: INSERT INTO "AuditLog" ("user_id", "action", "details") VALUES ($1, $2, $3) RETURNING * | PARAMS: ["c7db0eb6-5346-4c86-b40d-aa0a112e2dbc","CREATE_PROPERTY","Created property: OLOW TOWER (97388670-2446-4206-b46f-4d4141a883dc)"]
