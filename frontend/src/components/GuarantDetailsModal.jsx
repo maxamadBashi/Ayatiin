@@ -1,5 +1,5 @@
-import React from 'react';
 import { X, Phone, Mail, Shield, Briefcase, FileText, Calendar, User, Home, ExternalLink, Download } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUtils';
 
 const GuarantorDetailsModal = ({ isOpen, onClose, guarantor }) => {
     if (!isOpen || !guarantor) return null;
@@ -7,24 +7,6 @@ const GuarantorDetailsModal = ({ isOpen, onClose, guarantor }) => {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     const IMAGE_BASE_URL = API_URL.replace('/api', '');
 
-    const getImageUrl = (path) => {
-        if (!path) return '';
-        // Handle potential absolute Windows paths from backend
-        let normalized = path.replace(/\\/g, '/');
-
-        // If it contains 'uploads', extract everything from 'uploads' onwards
-        if (normalized.includes('uploads/')) {
-            normalized = normalized.substring(normalized.indexOf('uploads/'));
-        }
-
-        // Ensure it starts with a single slash
-        if (!normalized.startsWith('/')) {
-            normalized = '/' + normalized;
-        }
-
-        const baseUrl = API_URL.replace('/api', '');
-        return `${baseUrl}${normalized}`;
-    };
 
     const handleDownload = async (url, filename) => {
         try {

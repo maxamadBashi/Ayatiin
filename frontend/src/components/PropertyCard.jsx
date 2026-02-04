@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Home } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUtils';
 
 const PropertyCard = ({ property, onDelete, onEdit }) => {
   const getStatusColor = (status) => {
@@ -16,9 +17,7 @@ const PropertyCard = ({ property, onDelete, onEdit }) => {
       <div className="h-48 w-full bg-gray-200 relative">
         {property.images && property.images.length > 0 ? (
           <img
-            src={property.images[0].startsWith('http')
-              ? property.images[0]
-              : `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}${property.images[0].startsWith('/') ? '' : '/'}${property.images[0]}`}
+            src={getImageUrl(property.images[0])}
             alt={property.name}
             className="w-full h-full object-cover"
             onError={(e) => {

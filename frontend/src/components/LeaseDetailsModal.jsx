@@ -4,6 +4,7 @@ import {
     Users, Download, ArrowLeft, CheckCircle2, FileText,
     Eye, MapPin, Mail, Phone, Hash, Briefcase, Info, Clock, ExternalLink
 } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUtils';
 
 const LeaseDetailsModal = ({ isOpen, onClose, lease, allTenants = [], allUnits = [], allGuarantors = [], allProperties = [] }) => {
     if (!isOpen || !lease) return null;
@@ -11,17 +12,6 @@ const LeaseDetailsModal = ({ isOpen, onClose, lease, allTenants = [], allUnits =
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     const backendBaseUrl = API_URL.replace('/api', '');
 
-    const getImageUrl = (path) => {
-        if (!path) return '';
-        let normalized = path.replace(/\\/g, '/');
-        if (normalized.includes('uploads/')) {
-            normalized = normalized.substring(normalized.indexOf('uploads/'));
-        }
-        if (!normalized.startsWith('/')) {
-            normalized = '/' + normalized;
-        }
-        return `${backendBaseUrl}${normalized}`;
-    };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
