@@ -45,7 +45,6 @@ const getTenants = async (req, res) => {
       };
     });
 
-    console.log('Backend: Fetched Tenants (stitching manual):', mappedTenants.length); // DEBUG LOG
     res.json(mappedTenants);
   } catch (error) {
     console.error('Backend Error: getTenants - Full Error:', error); // DEBUG LOG

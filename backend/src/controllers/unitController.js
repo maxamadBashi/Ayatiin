@@ -24,7 +24,6 @@ const getUnits = async (req, res) => {
             };
         });
 
-        console.log('Backend: Fetched Units (manual property join):', mappedUnits.length); // DEBUG LOG
         res.json(mappedUnits);
     } catch (error) {
         console.error('Backend Error: getUnits - Full Error:', error); // DEBUG LOG
