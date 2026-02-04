@@ -3,6 +3,7 @@ import axios from '../utils/axios';
 import { Plus, Edit, Trash2, Shield, Phone, Mail, User, Eye } from 'lucide-react';
 import GuarantorModal from '../components/GuarantorModal';
 import GuarantorDetailsModal from '../components/GuarantDetailsModal';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Guarantors = () => {
     const [guarantors, setGuarantors] = useState([]);
@@ -94,8 +95,12 @@ const Guarantors = () => {
                     <div key={guarantor._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-6 group">
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                                    <User size={24} />
+                                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 overflow-hidden">
+                                    {guarantor.idPhoto ? (
+                                        <img src={getImageUrl(guarantor.idPhoto)} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User size={24} />
+                                    )}
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-gray-900">{guarantor.name}</h3>

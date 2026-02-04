@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Building2, MapPin, User, Layout, Info, Image, Plus, Check } from 'lucide-react';
+import { X, Building2, MapPin, User, Layout, Info, Image, Plus, Check, Eye } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUtils';
 
 const PropertyModal = ({ isOpen, onClose, onSubmit, property, isLand }) => {
     const [formData, setFormData] = useState({
@@ -267,9 +268,20 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, property, isLand }) => {
                                             </label>
                                             <p className="text-slate-400">or drag and drop</p>
                                         </div>
-                                        {images.length > 0 && (
+                                        {images.length > 0 ? (
                                             <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold inline-block animate-bounce shadow-md">
                                                 {images.length} Image(s) selected
+                                            </div>
+                                        ) : property?.images?.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 justify-center">
+                                                {property.images.map((img, idx) => (
+                                                    <a key={idx} href={getImageUrl(img)} target="_blank" rel="noreferrer" className="relative w-12 h-12 rounded-lg overflow-hidden border border-blue-200 hover:border-blue-500 transition-all group">
+                                                        <img src={getImageUrl(img)} alt="existing" className="w-full h-full object-cover" />
+                                                        <div className="absolute inset-0 bg-blue-600/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                            <Eye size={12} className="text-white" />
+                                                        </div>
+                                                    </a>
+                                                ))}
                                             </div>
                                         )}
                                         <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest pt-2">PNG, JPG, GIF (Max 10MB)</p>

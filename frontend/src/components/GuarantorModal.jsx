@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Phone, Mail, FileText, Upload, Plus, ShieldCheck, Briefcase } from 'lucide-react';
+import { X, User, Phone, Mail, FileText, Upload, Plus, ShieldCheck, Briefcase, Eye } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUtils';
 
 const GuarantorModal = ({ isOpen, onClose, onSubmit, guarantor }) => {
     const [formData, setFormData] = useState({
@@ -165,8 +166,15 @@ const GuarantorModal = ({ isOpen, onClose, onSubmit, guarantor }) => {
                                             <input type="file" onChange={(e) => handleFileChange(e, setIdPhoto)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                                             <div className="flex items-center justify-center gap-2 px-3 py-3 border border-dashed border-slate-300 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
                                                 <Upload size={16} />
-                                                <span className="text-[10px] truncate max-w-[80px] font-bold">{idPhoto ? idPhoto.name : 'Upload'}</span>
+                                                <span className="text-[10px] truncate max-w-[80px] font-bold">{idPhoto ? idPhoto.name : (guarantor?.idPhoto ? 'Change ID' : 'Upload')}</span>
                                             </div>
+                                            {guarantor?.idPhoto && !idPhoto && (
+                                                <div className="mt-2 flex items-center gap-2 text-[9px] text-teal-600 font-bold">
+                                                    <a href={getImageUrl(guarantor.idPhoto)} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:underline">
+                                                        <Eye size={10} /> View Existing
+                                                    </a>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">
@@ -175,8 +183,15 @@ const GuarantorModal = ({ isOpen, onClose, onSubmit, guarantor }) => {
                                             <input type="file" onChange={(e) => handleFileChange(e, setWorkIdPhoto)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                                             <div className="flex items-center justify-center gap-2 px-3 py-3 border border-dashed border-slate-300 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
                                                 <Upload size={16} />
-                                                <span className="text-[10px] truncate max-w-[80px] font-bold">{workIdPhoto ? workIdPhoto.name : 'Upload'}</span>
+                                                <span className="text-[10px] truncate max-w-[80px] font-bold">{workIdPhoto ? workIdPhoto.name : (guarantor?.workIdPhoto ? 'Change Work ID' : 'Upload')}</span>
                                             </div>
+                                            {guarantor?.workIdPhoto && !workIdPhoto && (
+                                                <div className="mt-2 flex items-center gap-2 text-[9px] text-teal-600 font-bold">
+                                                    <a href={getImageUrl(guarantor.workIdPhoto)} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:underline">
+                                                        <Eye size={10} /> View Existing
+                                                    </a>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

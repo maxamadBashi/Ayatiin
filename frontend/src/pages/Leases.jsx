@@ -3,6 +3,7 @@ import LeaseModal from '../components/LeaseModal';
 import axios from '../utils/axios';
 import { Plus, FileText, Trash2, Edit, Eye, Sparkles, AlertCircle } from 'lucide-react';
 import LeaseDetailsModal from '../components/LeaseDetailsModal';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Leases = () => {
     const [leases, setLeases] = useState([]);
@@ -310,13 +311,13 @@ const Leases = () => {
                                                                             <div className="space-y-1">
                                                                                 <p className="text-[9px] font-bold text-gray-400 uppercase">Sawirka ID</p>
                                                                                 <a
-                                                                                    href={`${import.meta.env.VITE_BACKEND_URL}/${lease.guarantor.idPhoto.replace(/\\/g, '/')}`}
+                                                                                    href={getImageUrl(lease.guarantor.idPhoto)}
                                                                                     target="_blank"
                                                                                     rel="noreferrer"
                                                                                     className="block w-16 h-16 rounded-lg border border-gray-100 overflow-hidden hover:opacity-80 transition-opacity bg-gray-50"
                                                                                 >
                                                                                     <img
-                                                                                        src={`${import.meta.env.VITE_BACKEND_URL}/${lease.guarantor.idPhoto.replace(/\\/g, '/')}`}
+                                                                                        src={getImageUrl(lease.guarantor.idPhoto)}
                                                                                         alt="Guarantor ID"
                                                                                         className="w-full h-full object-cover"
                                                                                     />
@@ -327,13 +328,13 @@ const Leases = () => {
                                                                             <div className="space-y-1">
                                                                                 <p className="text-[9px] font-bold text-gray-400 uppercase">Work ID</p>
                                                                                 <a
-                                                                                    href={`${import.meta.env.VITE_BACKEND_URL}/${lease.guarantor.workIdPhoto.replace(/\\/g, '/')}`}
+                                                                                    href={getImageUrl(lease.guarantor.workIdPhoto)}
                                                                                     target="_blank"
                                                                                     rel="noreferrer"
                                                                                     className="block w-16 h-16 rounded-lg border border-gray-100 overflow-hidden hover:opacity-80 transition-opacity bg-gray-50"
                                                                                 >
                                                                                     <img
-                                                                                        src={`${import.meta.env.VITE_BACKEND_URL}/${lease.guarantor.workIdPhoto.replace(/\\/g, '/')}`}
+                                                                                        src={getImageUrl(lease.guarantor.workIdPhoto)}
                                                                                         alt="Work ID"
                                                                                         className="w-full h-full object-cover"
                                                                                     />
