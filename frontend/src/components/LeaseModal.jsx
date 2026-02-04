@@ -131,6 +131,16 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
 
+        // Reset unit when property changes to avoid mismatch
+        if (name === 'property') {
+            setFormData(prev => ({
+                ...prev,
+                property: value,
+                unit: '' // Clear unit selection when property changes
+            }));
+            return;
+        }
+
         // Auto-populate rent amount when unit is selected
         if (name === 'unit' && value) {
             const selectedUnit = units.find(u => (u._id || u.id) === value);
@@ -140,7 +150,6 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                     unit: value,
                     rentAmount: selectedUnit.rentAmount
                 }));
-                console.log('✅ Auto-populated rent amount:', selectedUnit.rentAmount, 'from unit:', selectedUnit.unitNumber);
                 return;
             }
         }
@@ -165,8 +174,8 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
 
         // Check if property has units
         const propertyUnits = units.filter(u => {
-            const unitPropertyId = u.property?._id || u.property?.id || u.property;
-            return unitPropertyId === formData.property;
+            const unitPropertyId = u.propertyId || u.property?._id || u.property?.id || u.property;
+            return String(unitPropertyId) === String(formData.property);
         });
         if (propertyUnits.length === 0) {
             return setError("Selected property has no units. Please add units to the property before creating a lease.");
@@ -359,43 +368,36 @@ const LeaseModal = ({ isOpen, onClose, onSubmit, lease, tenants, units, properti
                                         >
                                             <option value="">Select Unit</option>
                                             {(() => {
-                                                const filteredUnits = units.filter(u => {
-                                                    // Check both direct propertyId field and nested property object
-                                                    const unitPropertyId = u.propertyId || u.property?.id || u.property?._id;
-                                                    const matchProp = !formData.property || unitPropertyId === formData.property;
-
-                                                    // For new leases: only show available units
-                                                    // For editing: show available units OR the current lease's unit (even if occupied)
-                                                    let matchStatus;
-                                                    if (lease) {
-                                                        // Editing mode: allow current unit even if occupied
-                                                        matchStatus = u.status === 'available' ||
-                                                            u._id === lease.unitId ||
-                                                            u.id === lease.unitId ||
-                                                            u._id === lease.unit?._id ||
-                                                            u.id === lease.unit?.id;
-                                                    } else {
-                                                        // New lease mode: only available units
-                                                        matchStatus = u.status === 'available';
-                                                    }
-
-                                                    if (formData.property) {
-                                                        console.log(`Unit ${u.unitNumber}: propertyId=${unitPropertyId}, selectedProperty=${formData.property}, status=${u.status}, match=${matchProp && matchStatus}`);
-                                                    }
-
-                                                    return matchProp && matchStatus;
+                                                // 1. Filter by property first
+                                                const propertyUnits = units.filter(u => {
+                                                    const unitPropertyId = u.propertyId ||
+                                                        (u.property && typeof u.property === 'object' ? (u.property._id || u.property.id) : u.property);
+                                                    return !formData.property || String(unitPropertyId) === String(formData.property);
                                                 });
 
-                                                if (formData.property && filteredUnits.length === 0) {
-                                                    console.warn('⚠️ No units found for selected property:', formData.property);
-                                                    console.log('Available units:', units.map(u => ({ id: u._id || u.id, number: u.unitNumber, propertyId: u.propertyId, status: u.status, nestedProp: u.property?.id })));
-                                                }
+                                                return propertyUnits.map(u => {
+                                                    const currentStatus = String(u.status || '').toLowerCase();
+                                                    const targetUnitId = (u._id || u.id);
+                                                    const leaseUnitId = lease ? (lease.unitId || lease.unit?._id || lease.unit?.id || lease.unit) : null;
 
-                                                return filteredUnits.map(u => (
-                                                    <option key={u._id || u.id} value={u._id || u.id}>
-                                                        {u.unitNumber}
-                                                    </option>
-                                                ));
+                                                    // Get property name for better identification
+                                                    const unitPropertyId = u.propertyId ||
+                                                        (u.property && typeof u.property === 'object' ? (u.property._id || u.property.id) : u.property);
+                                                    const propName = u.property?.name || properties.find(p => (p._id || p.id) === String(unitPropertyId))?.name || '';
+
+                                                    // A unit is selectable if it's available OR it's the current unit of the lease being edited
+                                                    const isSelectable = currentStatus === 'available' || (lease && String(targetUnitId) === String(leaseUnitId));
+
+                                                    return (
+                                                        <option
+                                                            key={targetUnitId}
+                                                            value={targetUnitId}
+                                                            disabled={!isSelectable}
+                                                        >
+                                                            {u.unitNumber} {propName ? `(${propName})` : ''} {!isSelectable ? `(${u.status})` : ''}
+                                                        </option>
+                                                    );
+                                                });
                                             })()}
                                         </select>
                                         <button
