@@ -1,5 +1,4 @@
 const cloudinary = require('cloudinary').v2;
-const streamifier = require('streamifier');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -7,17 +6,5 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true,
 });
-
-function uploadBuffer(buffer, folder = 'ayatiin') {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream({ folder }, (error, result) => {
-      if (error) return reject(error);
-      resolve(result);
-    });
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
-}
-
-cloudinary.uploadBuffer = uploadBuffer;
 
 module.exports = cloudinary;
