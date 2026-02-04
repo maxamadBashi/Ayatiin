@@ -75,11 +75,13 @@ const createProperty = async (req, res) => {
             });
         }
 
-        // Handle image uploads (Cloudinary URLs)
+        // Handle image uploads (Cloudinary URLs). If Cloudinary credentials are missing,
+        // upload middleware will skip and req.files may be empty.
         let images = [];
         if (req.files && req.files.length > 0) {
-            // multer-storage-cloudinary exposes the hosted URL at file.path
-            images = req.files.map(file => file.path);
+            images = req.files
+                .map(file => file.path || file.secure_url)
+                .filter(Boolean);
         }
 
         const property = await prisma.property.create({
@@ -124,7 +126,9 @@ const updateProperty = async (req, res) => {
         // Handle image uploads (Cloudinary URLs)
         let newImages = [];
         if (req.files && req.files.length > 0) {
-            newImages = req.files.map(file => file.path);
+            newImages = req.files
+                .map(file => file.path || file.secure_url)
+                .filter(Boolean);
         }
 
         const property = await prisma.property.findUnique({ where: { id: req.params.id } });
